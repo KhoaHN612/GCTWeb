@@ -5,15 +5,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!--===============================================================================================-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!--===============================================================================================-->
     <link rel="icon" type="image/png" href="~/~/images/icons/favicon.png"/>
     <!--===============================================================================================-->
     <link rel="stylesheet" type="text/css" href="~/vendor/bootstrap/css/bootstrap.min.css">
     <!--===============================================================================================-->
-    <link rel="stylesheet" type="text/css" href="~/fonts/font-awesome-4.7.0/css/font-awesome.min.css">
-    <!--===============================================================================================-->
     <link rel="stylesheet" type="text/css" href="~/fonts/iconic/css/material-design-iconic-font.min.css">
     <!--===============================================================================================-->
-    <link rel="stylesheet" type="text/css" href="~/fonts/linearicons-v1.0.0/icon-font.min.css">
+    <link rel="stylesheet" href="https://cdn.linearicons.com/free/1.0.0/icon-font.min.css">
     <!--===============================================================================================-->
     <link rel="stylesheet" type="text/css" href="~/vendor/animate/animate.css">
     <!--===============================================================================================-->
@@ -42,31 +42,31 @@
     <!-- Header desktop -->
     <div class="container-menu-desktop">
         <!-- Topbar -->
-        <div class="top-bar">
-            <div class="content-topbar flex-sb-m h-full container">
-                <div class="left-top-bar">
-                    Free shipping for standard order over $100
-                </div>
-
-                <div class="right-top-bar flex-w h-full">
-                    <a href="~/#" class="flex-c-m trans-04 p-lr-25">
-                        Help & FAQs
-                    </a>
-
-                    <a href="~/#" class="flex-c-m trans-04 p-lr-25">
-                        My Account
-                    </a>
-
-                    <a href="~/#" class="flex-c-m trans-04 p-lr-25">
-                        EN
-                    </a>
-
-                    <a href="~/#" class="flex-c-m trans-04 p-lr-25">
-                        USD
-                    </a>
-                </div>
-            </div>
-        </div>
+        @* <div class="top-bar"> *@
+        @*     <div class="content-topbar flex-sb-m h-full container"> *@
+        @*         <div class="left-top-bar"> *@
+        @*             Free shipping for standard order over $100 *@
+        @*         </div> *@
+        @* *@
+        @*         <div class="right-top-bar flex-w h-full"> *@
+        @*             <a href="~/#" class="flex-c-m trans-04 p-lr-25"> *@
+        @*                 Help & FAQs *@
+        @*             </a> *@
+        @* *@
+        @*             <a href="~/#" class="flex-c-m trans-04 p-lr-25"> *@
+        @*                 My Account *@
+        @*             </a> *@
+        @* *@
+        @*             <a href="~/#" class="flex-c-m trans-04 p-lr-25"> *@
+        @*                 EN *@
+        @*             </a> *@
+        @* *@
+        @*             <a href="~/#" class="flex-c-m trans-04 p-lr-25"> *@
+        @*                 USD *@
+        @*             </a> *@
+        @*         </div> *@
+        @*     </div> *@
+        @* </div> *@
 
         <div class="wrap-menu-desktop">
             <nav class="limiter-menu-desktop container">
@@ -81,11 +81,6 @@
                     <ul class="main-menu">
                         <li class="active-menu">
                             <a href="~/index.html">Home</a>
-                            <ul class="sub-menu">
-                                <li><a href="~/index.html">Homepage 1</a></li>
-                                <li><a href="~/home-02.html">Homepage 2</a></li>
-                                <li><a href="~/home-03.html">Homepage 3</a></li>
-                            </ul>
                         </li>
 
                         <li>
@@ -120,8 +115,8 @@
                         <i class="zmdi zmdi-shopping-cart"></i>
                     </div>
 
-                    <a href="~/#" class="dis-block icon-header-item cl2 hov-cl1 trans-04 p-l-22 p-r-11 icon-header-noti" data-notify="0">
-                        <i class="zmdi zmdi-favorite-outline"></i>
+                    <a href="~/#" class="dis-block icon-header-item cl2 hov-cl1 trans-04 p-l-22 p-r-11">
+                        <i class="zmdi zmdi-account-circle"></i>
                     </a>
                 </div>
             </nav>
@@ -146,7 +141,7 @@
             </div>
 
             <a href="~/#" class="dis-block icon-header-item cl2 hov-cl1 trans-04 p-r-11 p-l-10 icon-header-noti" data-notify="0">
-                <i class="zmdi zmdi-favorite-outline"></i>
+                <i class="zmdi zmdi-account-circle"></i>
             </a>
         </div>
 
@@ -192,14 +187,9 @@
         <ul class="main-menu-m">
             <li>
                 <a href="~/index.html">Home</a>
-                <ul class="sub-menu-m">
-                    <li><a href="~/index.html">Homepage 1</a></li>
-                    <li><a href="~/home-02.html">Homepage 2</a></li>
-                    <li><a href="~/home-03.html">Homepage 3</a></li>
-                </ul>
                 <span class="arrow-main-menu-m">
-						<i class="fa fa-angle-right" aria-hidden="true"></i>
-					</span>
+					<i class="fa fa-angle-right" aria-hidden="true"></i>
+				</span>
             </li>
 
             <li>
@@ -332,7 +322,34 @@
 <footer class="bg3 p-t-75 p-b-32">
     <div class="container">
         <div class="row">
-            <div class="col-sm-6 col-lg-3 p-b-50">
+
+            <div class="col-sm-6 col-lg-4 p-b-50">
+                <h4 class="stext-301 cl0 p-b-30">
+                    GET IN TOUCH
+                </h4>
+                <ul>
+                    <li class="p-b-10 cl7">
+                        <i class="fa-solid fa-location-dot"></i> 
+                        <span>  Ninh Kiều, Cần Thơ, Việt Nam</span>
+                    </li>
+                    
+                    <li class="p-b-10 cl7">
+                        <i class="fa-solid fa-envelope"></i>
+                    </li>
+                </ul>
+
+                <div class="p-t-27">
+                    <a href="~/#" class="fs-18 cl7 hov-cl1 trans-04 m-r-16">
+                        <i class="fa-brands fa-facebook"></i>
+                    </a>
+
+                    <a href="~/#" class="fs-18 cl7 hov-cl1 trans-04 m-r-16">
+                        <i class="fa-brands fa-instagram"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="col-sm-6 col-lg-4 p-b-50 text-center">
                 <h4 class="stext-301 cl0 p-b-30">
                     Categories
                 </h4>
@@ -364,7 +381,7 @@
                 </ul>
             </div>
 
-            <div class="col-sm-6 col-lg-3 p-b-50">
+            <div class="col-sm-6 col-lg-4 p-b-50 text-center">
                 <h4 class="stext-301 cl0 p-b-30">
                     Help
                 </h4>
@@ -395,80 +412,6 @@
                     </li>
                 </ul>
             </div>
-
-            <div class="col-sm-6 col-lg-3 p-b-50">
-                <h4 class="stext-301 cl0 p-b-30">
-                    GET IN TOUCH
-                </h4>
-
-                <p class="stext-107 cl7 size-201">
-                    Any questions? Let us know in store at 8th floor, 379 Hudson St, New York, NY 10018 or call us on (+1) 96 716 6879
-                </p>
-
-                <div class="p-t-27">
-                    <a href="~/#" class="fs-18 cl7 hov-cl1 trans-04 m-r-16">
-                        <i class="fa fa-facebook"></i>
-                    </a>
-
-                    <a href="~/#" class="fs-18 cl7 hov-cl1 trans-04 m-r-16">
-                        <i class="fa fa-instagram"></i>
-                    </a>
-
-                    <a href="~/#" class="fs-18 cl7 hov-cl1 trans-04 m-r-16">
-                        <i class="fa fa-pinterest-p"></i>
-                    </a>
-                </div>
-            </div>
-
-            <div class="col-sm-6 col-lg-3 p-b-50">
-                <h4 class="stext-301 cl0 p-b-30">
-                    Newsletter
-                </h4>
-
-                <form>
-                    <div class="wrap-input1 w-full p-b-4">
-                        <input class="input1 bg-none plh1 stext-107 cl7" type="text" name="email" placeholder="email@example.com">
-                        <div class="focus-input1 trans-04"></div>
-                    </div>
-
-                    <div class="p-t-18">
-                        <button class="flex-c-m stext-101 cl0 size-103 bg1 bor1 hov-btn2 p-lr-15 trans-04">
-                            Subscribe
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <div class="p-t-40">
-            <div class="flex-c-m flex-w p-b-18">
-                <a href="~/#" class="m-all-1">
-                    <img src="/images/icons/icon-pay-01.png" alt="ICON-PAY">
-                </a>
-
-                <a href="~/#" class="m-all-1">
-                    <img src="/images/icons/icon-pay-02.png" alt="ICON-PAY">
-                </a>
-
-                <a href="~/#" class="m-all-1">
-                    <img src="/images/icons/icon-pay-03.png" alt="ICON-PAY">
-                </a>
-
-                <a href="~/#" class="m-all-1">
-                    <img src="/images/icons/icon-pay-04.png" alt="ICON-PAY">
-                </a>
-
-                <a href="~/#" class="m-all-1">
-                    <img src="/images/icons/icon-pay-05.png" alt="ICON-PAY">
-                </a>
-            </div>
-
-            <p class="stext-107 cl6 txt-center">
-                <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
-                Copyright &copy;<script>document.write(new Date().getFullYear());</script> All rights reserved | Made with <i class="fa fa-heart-o" aria-hidden="true"></i> by <a href="~/https://colorlib.com" target="_blank">Colorlib</a> &amp; distributed by <a href="~/https://themewagon.com" target="_blank">ThemeWagon</a>
-                <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
-
-            </p>
         </div>
     </div>
 </footer>
@@ -609,25 +552,7 @@
                         </div>
 
                         <!--  -->
-                        <div class="flex-w flex-m p-l-100 p-t-40 respon7">
-                            <div class="flex-m bor9 p-r-10 m-r-11">
-                                <a href="~/#" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 js-addwish-detail tooltip100" data-tooltip="Add to Wishlist">
-                                    <i class="zmdi zmdi-favorite"></i>
-                                </a>
-                            </div>
-
-                            <a href="~/#" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 m-r-8 tooltip100" data-tooltip="Facebook">
-                                <i class="fa fa-facebook"></i>
-                            </a>
-
-                            <a href="~/#" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 m-r-8 tooltip100" data-tooltip="Twitter">
-                                <i class="fa fa-twitter"></i>
-                            </a>
-
-                            <a href="~/#" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 m-r-8 tooltip100" data-tooltip="Google Plus">
-                                <i class="fa fa-google-plus"></i>
-                            </a>
-                        </div>
+                       
                     </div>
                 </div>
             </div>
