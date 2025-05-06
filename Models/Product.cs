@@ -71,10 +71,10 @@ public class Product
 
     // --- Navigation properties ---
     [ForeignKey(nameof(BrandId))]
-    public virtual Brand Brand { get; set; } = null!;
+    public virtual Brand? Brand { get; set; } = null!;
 
     [ForeignKey(nameof(CategoryId))]
-    public virtual Category Category { get; set; } = null!;
+    public virtual Category? Category { get; set; } = null!;
 
     [ForeignKey(nameof(GradeId))]
     public virtual Grade? Grade { get; set; }

@@ -18,6 +18,9 @@ public class ProductImage
     [Column("product_id")]
     public Guid ProductId { get; set; }
 
+    [NotMapped]
+    public IFormFile? ImageFile { get; set; }
+    
     [Required]
     [StringLength(512)]
     [Column("image_url")]
@@ -37,6 +40,6 @@ public class ProductImage
 
     // Navigation property (cho mối quan hệ một-nhiều)
     [ForeignKey(nameof(ProductId))]
-    public virtual Product Product { get; set; } = null!;
+    public virtual Product? Product { get; set; } = null!;
     
 }
