@@ -35,6 +35,7 @@ namespace GCTWeb.Controllers_
 
             var grade = await _context.Grades
                 .FirstOrDefaultAsync(m => m.GradeId == id);
+            
             if (grade == null)
             {
                 return NotFound();
