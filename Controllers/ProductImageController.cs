@@ -7,16 +7,20 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using GCTWeb.Data;
 using GCTWeb.Models;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace GCTWeb.Controllers_
 {
     public class ProductImageController : Controller
     {
         private readonly ApplicationDbContext _context;
+        
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public ProductImageController(ApplicationDbContext context)
+        public ProductImageController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         // GET: ProductImage
@@ -57,13 +61,42 @@ namespace GCTWeb.Controllers_
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ImageId,ProductId,ImageUrl,AltText,IsPrimary,CreatedAt")] ProductImage productImage)
+        public async Task<IActionResult> Create([Bind("ImageId,ProductId,ImageFile,AltText,IsPrimary,CreatedAt")] ProductImage productImage)
         {
+            if (productImage.ImageFile == null || productImage.ImageFile.Length == 0)
+                return BadRequest("No file uploaded");
+                
+            productImage.ImageId = Guid.NewGuid();
+            var folderPath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "product-images");
+            var fileExtension = Path.GetExtension(productImage.ImageFile.FileName);
+            var fileName = productImage.ImageId.ToString() + fileExtension;
+            var fullPath = Path.Combine(folderPath, fileName);
+            var relativePath = Path.Combine("uploads", "product-images", fileName);
+            
+                
+            using var memoryStream = new MemoryStream();
+            await productImage.ImageFile.CopyToAsync(memoryStream); //Temp save (limit <5mb)
+            
+            /*
+             Directory.CreateDirectory(folderPath);
+             using (var stream = new FileStream(fullPath, FileMode.Create))
+            {
+                await productImage.ImageFile.CopyToAsync(stream); // Save directly into server not thought anything (maybe not right) 
+            }*/
+                
+            productImage.ImageUrl = relativePath;
+            ModelState.Remove(nameof(productImage.ImageUrl)); 
+            ModelState.SetModelValue("ImageUrl", new ValueProviderResult(relativePath));
+            TryValidateModel(productImage);
+            
             if (ModelState.IsValid)
             {
-                productImage.ImageId = Guid.NewGuid();
                 _context.Add(productImage);
                 await _context.SaveChangesAsync();
+                
+                Directory.CreateDirectory(folderPath);
+                await System.IO.File.WriteAllBytesAsync(fullPath, memoryStream.ToArray()); // If valid save file to server
+                
                 return RedirectToAction(nameof(Index));
             }
             ViewData["ProductId"] = new SelectList(_context.Products, "ProductId", "Name", productImage.ProductId);

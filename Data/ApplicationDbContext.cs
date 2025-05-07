@@ -38,21 +38,20 @@ public class ApplicationDbContext: IdentityDbContext<ApplicationUser>
 
         // --- Cấu hình mối quan hệ Product <-> ProductImage (QUAN TRỌNG) ---
 
-        // 1. Mối quan hệ Một-Nhiều (Product -> ProductImages) - Chuẩn
+        // 1. Mối quan hệ Một-Nhiều (Product -> ProductImages) 
         builder.Entity<ProductImage>()
             .HasOne(pi => pi.Product)          // Một ProductImage thuộc về một Product
             .WithMany(p => p.ProductImages)    // Một Product có nhiều ProductImages (qua collection này)
             .HasForeignKey(pi => pi.ProductId) // Khóa ngoại trong ProductImage là ProductId
             .OnDelete(DeleteBehavior.Cascade); // Hoặc Restrict tùy yêu cầu khi xóa Product
 
-        // 2. Mối quan hệ Một-Một/Không (Product -> PrimaryImage) - Mới thêm
+        // 2. Mối quan hệ Một-Một/Không (Product -> PrimaryImage) 
         builder.Entity<Product>()
             .HasOne(p => p.PrimaryImage)       // Một Product có một (hoặc không) PrimaryImage
             .WithOne()                         // Phía ProductImage KHÔNG có navigation property ngược lại *dành riêng* cho mối quan hệ này
             .HasForeignKey<Product>(p => p.PrimaryImageId) // Khóa ngoại nằm trong Product là PrimaryImageId
             .IsRequired(false)                 // Mối quan hệ này là tùy chọn (FK nullable)
             .OnDelete(DeleteBehavior.SetNull); // Khi ProductImage bị xóa, set Product.PrimaryImageId = NULL
-
 
         // --- Cấu hình ON DELETE khác (nếu cần ghi đè mặc định) ---
         builder.Entity<OrderDetail>()
