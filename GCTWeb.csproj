@@ -144,4 +144,17 @@
       <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.3" />
     </ItemGroup>
 
+    <ItemGroup>
+      <AdditionalFiles Include="Views\Admin\Brand\Create.cshtml" />
+      <AdditionalFiles Include="Views\Admin\Brand\Delete.cshtml" />
+      <AdditionalFiles Include="Views\Admin\Brand\Details.cshtml" />
+      <AdditionalFiles Include="Views\Admin\Brand\Edit.cshtml" />
+      <AdditionalFiles Include="Views\Admin\Brand\Index.cshtml" />
+      <AdditionalFiles Include="Views\Admin\Product\Create.cshtml" />
+      <AdditionalFiles Include="Views\Admin\Product\Delete.cshtml" />
+      <AdditionalFiles Include="Views\Admin\Product\Details.cshtml" />
+      <AdditionalFiles Include="Views\Admin\Product\Edit.cshtml" />
+      <AdditionalFiles Include="Views\Admin\Product\Index.cshtml" />
+    </ItemGroup>
+
 </Project>
