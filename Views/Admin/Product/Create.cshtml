@@ -1,7 +1,8 @@
-@model GCTWeb.Models.Product
+@model GCTWeb.Models.ProductCreateViewModel
 
 @{
     ViewData["Title"] = "Create";
+    Layout = "../Shared/_LayoutAdmin.cshtml";
 }
 
 <h1>Create</h1>
@@ -10,7 +11,7 @@
 <hr />
 <div class="row">
     <div class="col-md-4">
-        <form asp-action="Create">
+        <form asp-action="Create" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
                 <label asp-for="Name" class="control-label"></label>
@@ -24,15 +25,21 @@
             </div>
             <div class="form-group">
                 <label asp-for="BrandId" class="control-label"></label>
-                <select asp-for="BrandId" class ="form-control" asp-items="ViewBag.BrandId"></select>
+                <select asp-for="BrandId" class="form-control" asp-items="Model.Brands">
+                    <option value="">-- Select Brand --</option>
+                </select>
             </div>
             <div class="form-group">
                 <label asp-for="CategoryId" class="control-label"></label>
-                <select asp-for="CategoryId" class ="form-control" asp-items="ViewBag.CategoryId" name="CategoryId"></select>
+                <select asp-for="CategoryId" class="form-control" asp-items="Model.Categories" name="CategoryId">
+                    <option value="">-- Select Category --</option>
+                </select>
             </div>
             <div class="form-group">
                 <label asp-for="GradeId" class="control-label"></label>
-                <select asp-for="GradeId" class ="form-control" asp-items="ViewBag.GradeId"></select>
+                <select asp-for="GradeId" class="form-control" asp-items="Model.Grades">
+                    <option value="">-- Select Grade --</option>
+                </select>
             </div>
             <div class="form-group">
                 <label asp-for="Price" class="control-label"></label>
@@ -49,27 +56,24 @@
                 <input asp-for="Description" class="form-control" />
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
+            <div class="form-group mb-3">
+                <label asp-for="NewImages" class="control-label"></label>
+                @* We'll use a custom button to trigger this, or let users click it directly *@
+                <input asp-for="NewImages" type="file" class="form-control" multiple id="imageUploadInput" accept="image/*" />
+                <span asp-validation-for="NewImages" class="text-danger"></span>
+            </div>
+            <input type="hidden" asp-for="SelectedPrimaryImageIndex" id="selectedPrimaryImageIndexInput" />
+            <div id="imagePreviewContainer" class="mb-3 d-flex flex-wrap gap-2">
+                @* Image previews will be appended here by JavaScript *@
+            </div>
             <div class="form-group form-check">
                 <label class="form-check-label">
                     <input class="form-check-input" asp-for="IsActive" /> @Html.DisplayNameFor(model => model.IsActive)
                 </label>
             </div>
             <div class="form-group">
-                <label asp-for="CreatedAt" class="control-label"></label>
-                <input asp-for="CreatedAt" class="form-control" />
-                <span asp-validation-for="CreatedAt" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="UpdatedAt" class="control-label"></label>
-                <input asp-for="UpdatedAt" class="form-control" />
-                <span asp-validation-for="UpdatedAt" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="PrimaryImageId" class="control-label"></label>
-                <select asp-for="PrimaryImageId" class ="form-control" asp-items="ViewBag.PrimaryImageId"></select>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+                <input type="submit"  asp-controller="Admin" asp-action ="ProductCreate" value="Create" class="btn btn-primary" />
+                <a asp-action="ProductIndex" class="btn btn-secondary">Back to List</a>
             </div>
         </form>
     </div>
@@ -81,4 +85,186 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        $(document).ready(function () {
+            const imageUploadInput = document.getElementById('imageUploadInput');
+            const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+            let selectedFiles = []; // Array to keep track of all selected files across multiple selections
+            const selectedPrimaryImageIndexInput = document.getElementById('selectedPrimaryImageIndexInput'); // Input ẩn mới
+
+            $(imageUploadInput).on('change', function (event) {
+                const newFiles = Array.from(event.target.files); // Get newly selected files
+
+                // Add new files to our main list, avoiding duplicates if any (though browser usually handles this for one input event)
+                newFiles.forEach(file => {
+                    if (!selectedFiles.some(sf => sf.name === file.name && sf.size === file.size && sf.lastModified === file.lastModified)) {
+                        selectedFiles.push(file);
+                    }
+                });
+
+                renderPreviews();
+                updateFileInput(); // Important: Update the actual file input with all selected files
+            });
+
+            
+            
+            @*function renderPreviews() {
+                imagePreviewContainer.innerHTML = ''; // Clear existing previews
+
+                selectedFiles.forEach((file, index) => {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const previewWrapper = document.createElement('div');
+                        previewWrapper.classList.add('position-relative', 'border', 'p-1', 'rounded');
+                        previewWrapper.style.width = '100px'; // Adjust size as needed
+                        previewWrapper.style.height = '100px';
+
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.classList.add('img-thumbnail');
+                        img.style.width = '100%';
+                        img.style.height = '100%';
+                        img.style.objectFit = 'cover';
+                        img.alt = file.name;
+
+                        const removeBtn = document.createElement('button');
+                        removeBtn.type = 'button';
+                        removeBtn.classList.add('btn', 'btn-danger', 'btn-sm', 'position-absolute', 'top-0', 'end-0');
+                        removeBtn.innerHTML = '×'; // 'X' character
+                        removeBtn.style.lineHeight = '1';
+                        removeBtn.style.padding = '0.1rem 0.3rem';
+                        removeBtn.onclick = function () {
+                            removeFile(index);
+                        };
+
+                        previewWrapper.appendChild(img);
+                        previewWrapper.appendChild(removeBtn);
+                        imagePreviewContainer.appendChild(previewWrapper);
+                    }
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            function removeFile(indexToRemove) {
+                selectedFiles.splice(indexToRemove, 1); // Remove file from our array
+                renderPreviews(); // Re-render previews
+                updateFileInput(); // Update the actual file input
+            }*@
+
+            function renderPreviews() {
+                imagePreviewContainer.innerHTML = '';
+                let currentPrimaryIndex = selectedPrimaryImageIndexInput.value !== "" ? parseInt(selectedPrimaryImageIndexInput.value, 10) : null;
+
+                selectedFiles.forEach((file, index) => {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const previewWrapper = document.createElement('div');
+                        previewWrapper.classList.add('position-relative', 'border', 'p-1', 'rounded', 'text-center');
+                        previewWrapper.style.width = '120px';
+
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.classList.add('img-thumbnail', 'mb-1');
+                        img.style.width = '100px';
+                        img.style.height = '100px';
+                        img.style.objectFit = 'cover';
+                        img.alt = file.name;
+
+                        const removeBtn = document.createElement('button');
+                        removeBtn.type = 'button';
+                        removeBtn.classList.add('btn', 'btn-danger', 'btn-sm', 'position-absolute');
+                        removeBtn.innerHTML = '×';
+                        removeBtn.style.top = '2px';
+                        removeBtn.style.right = '2px';
+                        removeBtn.style.lineHeight = '1';
+                        removeBtn.style.padding = '0.1rem 0.3rem';
+                        removeBtn.onclick = function () {
+                            removeFile(index); 
+                        };
+
+                        const radioLabel = document.createElement('label');
+                        radioLabel.classList.add('form-check-label', 'd-block');
+                        radioLabel.style.fontSize = '0.8rem';
+
+                        const radioInput = document.createElement('input');
+                        radioInput.type = 'radio';
+                        radioInput.name = 'primaryImageSelector';
+                        radioInput.classList.add('form-check-input', 'me-1');
+                        radioInput.value = index; 
+
+                        if (currentPrimaryIndex === index) {
+                            radioInput.checked = true;
+                        }
+
+                        radioInput.onchange = function() {
+                            if (this.checked) {
+                                selectedPrimaryImageIndexInput.value = this.value; 
+                                console.log("Primary index selected: " + this.value);
+                            }
+                        };
+
+                        radioLabel.appendChild(radioInput);
+                        radioLabel.appendChild(document.createTextNode('Set Primary'));
+
+                        previewWrapper.appendChild(removeBtn);
+                        previewWrapper.appendChild(img);
+                        previewWrapper.appendChild(radioLabel);
+                        imagePreviewContainer.appendChild(previewWrapper);
+                    }
+                    reader.readAsDataURL(file);
+                });
+
+                // Tự động chọn ảnh chính đầu tiên nếu chưa có và có ảnh
+                if (currentPrimaryIndex === null && selectedFiles.length > 0) {
+                    selectedPrimaryImageIndexInput.value = "0"; // Index của ảnh đầu tiên
+                    const firstRadio = imagePreviewContainer.querySelector('input[type="radio"][value="0"]');
+                    if (firstRadio) {
+                        firstRadio.checked = true;
+                        console.log("Auto-Primary index selected: 0");
+                    }
+                } else if (selectedFiles.length === 0) {
+                    selectedPrimaryImageIndexInput.value = ''; // Xóa nếu không có ảnh
+                }
+            }
+
+            function removeFile(indexToRemove) {
+                selectedFiles.splice(indexToRemove, 1);
+                let currentPrimaryIndex = selectedPrimaryImageIndexInput.value !== "" ? parseInt(selectedPrimaryImageIndexInput.value, 10) : null;
+
+                if (currentPrimaryIndex !== null) {
+                    if (indexToRemove === currentPrimaryIndex) {
+                        selectedPrimaryImageIndexInput.value = ''; // Bỏ chọn nếu ảnh chính bị xóa
+                        // renderPreviews sẽ tự động chọn lại cái đầu tiên nếu còn
+                    } else if (indexToRemove < currentPrimaryIndex) {
+                        // Nếu xóa ảnh trước ảnh chính hiện tại, cập nhật lại index của ảnh chính
+                        selectedPrimaryImageIndexInput.value = (currentPrimaryIndex - 1).toString();
+                    }
+                }
+                renderPreviews();
+                updateFileInput();
+            }
+
+            function updateFileInput() {
+                // The DataTransfer object is a way to programmatically set files on an input
+                const dataTransfer = new DataTransfer();
+                selectedFiles.forEach(file => {
+                    dataTransfer.items.add(file);
+                });
+                imageUploadInput.files = dataTransfer.files;
+
+                // Optional: If using jQuery Validate, you might need to re-trigger validation
+                if ($.validator && $(imageUploadInput).closest('form').data('validator')) {
+                    $(imageUploadInput).valid();
+                }
+            }
+
+            // Handle form submission to ensure 'selectedFiles' are what gets submitted
+            $('#createProductForm').on('submit', function() {
+                if (selectedFiles.length > 0 && selectedPrimaryImageIndexInput.value === "") {
+                    selectedPrimaryImageIndexInput.value = "0"; 
+                }
+                updateFileInput();
+            });
+        });
+    </script>
 }
