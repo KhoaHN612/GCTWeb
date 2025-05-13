@@ -1,4 +1,4 @@
-@model IEnumerable<GCTWeb.Models.Brand>
+@model List<Category>
 
 @{
     ViewData["Title"] = "Index";
@@ -8,7 +8,7 @@
 <div class="page-inner">
 
     <div class="page-header">
-        <h3 class="fw-bold mb-3">Brand Management</h3>
+        <h3 class="fw-bold mb-3">Category Management</h3>
         <ul class="breadcrumbs mb-3">
             <li class="nav-home">
                 <a href="#">
@@ -19,16 +19,16 @@
                 <i class="fa-solid fa-greater-than"></i>
             </li>
             <li class="nav-item">
-                <a href="#">Brands List</a>
+                <a href="#">Categories List</a>
             </li>
         </ul>
     </div>
     <div class="col-md-12">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h4 class="card-title mb-0">Brands List</h4>
-                <button type="button" class="btn btn-primary btn-round" data-bs-toggle="modal" data-bs-target="#addBrandModal">
-                    Add Brand
+                <h4 class="card-title mb-0">Categories List</h4>
+                <button type="button" class="btn btn-primary btn-round" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                    Add Category
                 </button>
             </div>
             <div class="card-body">
@@ -48,14 +48,13 @@
                         </tfoot>
                         <tbody>
                         @if (Model != null && Model.Any()) { @* Added null check *@
-                            foreach (var brand in Model) {
+                            foreach (var category in Model) {
                                 <tr>
-                                    <td>@Html.DisplayFor(modelItem => brand.BrandId)</td>
+                                    <td>@Html.DisplayFor(modelItem => category.CategoryId)</td>
                                     <td>
-                                        @* Display the Brand Name *@
-                                        @Html.DisplayFor(modelItem => brand.BrandName)
+                                        @Html.DisplayFor(modelItem => category.CategoryName)
 
-                                        <form asp-controller="Admin" asp-action="DeleteBrand" asp-route-id="@brand.BrandId" method="post" class="d-inline ms-2" onsubmit="return confirm('Are you sure you want to delete brand: @Html.Encode(brand.BrandName)?');">
+                                        <form asp-controller="Admin" asp-action="DeleteCategory" asp-route-id="@category.CategoryId" method="post" class="d-inline ms-2" onsubmit="return confirm('Are you sure you want to delete category: @Html.Encode(category.CategoryName)?');">
                                             @Html.AntiForgeryToken()
                                             <button type="submit" class="btn btn-link btn-danger btn-sm p-0" title="Delete">
                                                 <i class="fa fa-trash"></i>
@@ -67,7 +66,7 @@
                         }
                         else {
                             <tr>
-                                <td colspan="2" class="text-center">No brands found.</td> @* Reduced colspan to 2 *@
+                                <td colspan="2" class="text-center">No category found.</td> @* Reduced colspan to 2 *@
                             </tr>
                         }
                         </tbody>
@@ -78,37 +77,34 @@
     </div>
 </div>
 
-@* ========= Add Brand Modal ========= *@
-<div class="modal fade" id="addBrandModal" tabindex="-1" aria-labelledby="addBrandModalLabel" aria-hidden="true">
+<div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm"> @* modal-sm makes it smaller *@
         <div class="modal-content">
-            @* Use a form tag helper to post to the CreateBrand action in AdminController *@
-            <form asp-controller="Admin" asp-action="CreateBrand" method="post" id="addBrandForm">
+            <form asp-controller="Admin" asp-action="CreateCategory" method="post" id="addCategoryForm">
                 @Html.AntiForgeryToken() @* Security Token *@
 
                 <div class="modal-header">
-                    <h5 class="modal-title" id="addBrandModalLabel">Add New Brand</h5>
+                    <h5 class="modal-title" id="addCategoryModalLabel">Add New Category</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="brandNameInput" class="form-label">Brand Name</label>
-                        <input type="text" class="form-control" id="brandNameInput" name="BrandName" required placeholder="Enter brand name">
-                        @* 'name="BrandName"' must match the parameter name or model property in your controller action *@
+                        <label for="categoryNameInput" class="form-label">Category Name</label>
+                        <input type="text" class="form-control" id="categoryNameInput" name="CategoryName" required placeholder="Enter category name">
+                        @* 'name="CategoryName"' must match the parameter name or model property in your controller action *@
                         <div class="invalid-feedback">
-                            Please enter a brand name.
+                            Please enter a category name.
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Save Brand</button>
+                    <button type="submit" class="btn btn-primary">Save Category</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-@* ========= End Add Brand Modal ========= *@
 
 
 @section Scripts {
@@ -150,14 +146,14 @@
     </script>
 
     <script>
-        var addBrandModalElement = document.getElementById('addBrandModal');
-        addBrandModalElement.addEventListener('hidden.bs.modal', function (event) {
+        var addCategoryModalElement = document.getElementById('addCategoryModal');
+        addCategoryModalElement.addEventListener('hidden.bs.modal', function (event) {
             // Reset the form inside the modal when it's hidden
-            var form = document.getElementById('addBrandForm');
+            var form = document.getElementById('addCategoryForm');
             if(form) {
                 form.reset();
                 // If you are using Bootstrap's validation classes, you might want to remove them too
-                $('#brandNameInput').removeClass('is-invalid');
+                $('#categoryNameInput').removeClass('is-invalid');
             }
         });
     </script>

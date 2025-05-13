@@ -123,6 +123,16 @@
       <_ContentIncludedByDefault Remove="wwwroot\images\examples\product6.jpg" />
       <_ContentIncludedByDefault Remove="wwwroot\images\examples\product7.jpg" />
       <_ContentIncludedByDefault Remove="wwwroot\images\examples\product8.jpg" />
+      <_ContentIncludedByDefault Remove="Views\Brand\Create.cshtml" />
+      <_ContentIncludedByDefault Remove="Views\Brand\Delete.cshtml" />
+      <_ContentIncludedByDefault Remove="Views\Brand\Details.cshtml" />
+      <_ContentIncludedByDefault Remove="Views\Brand\Edit.cshtml" />
+      <_ContentIncludedByDefault Remove="Views\Brand\Index.cshtml" />
+      <_ContentIncludedByDefault Remove="Views\AdminProduct\Create.cshtml" />
+      <_ContentIncludedByDefault Remove="Views\AdminProduct\Delete.cshtml" />
+      <_ContentIncludedByDefault Remove="Views\AdminProduct\Details.cshtml" />
+      <_ContentIncludedByDefault Remove="Views\AdminProduct\Edit.cshtml" />
+      <_ContentIncludedByDefault Remove="Views\AdminProduct\Index.cshtml" />
     </ItemGroup>
 
     <ItemGroup>
