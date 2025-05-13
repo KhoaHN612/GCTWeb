@@ -218,11 +218,6 @@ public class AdminController : Controller {
         viewModel.Grades = new SelectList(await _context.Grades.OrderBy(g => g.GradeName).ToListAsync(), "GradeId",
             "GradeName", viewModel.GradeId);
     }
-
-
-    public IActionResult Brands()
-    {
-        return View();
     
     [Route("Admin/Brand")]
     public async Task<IActionResult> BrandIndex() {
