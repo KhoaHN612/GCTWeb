@@ -1,6 +1,51 @@
 @model GCTWeb.Models.Product
 
 @{
+    ViewData["Title"] = "Delete Product";
+    Layout = "../Shared/_LayoutAdmin.cshtml";
+}
+
+<h1>Delete Product</h1>
+<h3 class="text-danger">Are you sure you want to delete this product?</h3>
+<div>
+    <h4>@Model.Name</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-3">Name</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.Name)</dd>
+
+        <dt class="col-sm-3">SKU</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.Sku)</dd>
+
+        <dt class="col-sm-3">Brand</dt>
+        <dd class="col-sm-9">@(Model.Brand?.BrandName ?? "N/A")</dd>
+
+        <dt class="col-sm-3">Category</dt>
+        <dd class="col-sm-9">@(Model.Category?.CategoryName ?? "N/A")</dd>
+
+        <dt class="col-sm-3">Price</dt>
+        <dd class="col-sm-9">@Model.Price.ToString("N0")</dd>
+
+        @if (Model.PrimaryImage != null)
+        {
+            <dt class="col-sm-3">Primary Image</dt>
+            <dd class="col-sm-9">
+                <img src="@Url.Content(Model.PrimaryImage.ImageUrl)" alt="Primary Image" style="max-width: 150px;" />
+            </dd>
+        }
+    </dl>
+    <hr/>
+    <form asp-action="ProductDelete" asp-route-id="@Model.ProductId" method="post">
+        <input type="hidden" asp-for="ProductId" />
+        <input type="submit" value="Delete" class="btn btn-danger" /> |
+        <a asp-action="ProductIndex" class="btn btn-secondary">Back to List</a>
+    </form>
+</div>
+
+@*
+@model GCTWeb.Models.Product
+
+@{
     ViewData["Title"] = "Delete";
 }
 
@@ -91,3 +136,4 @@
         <a asp-action="Index">Back to List</a>
     </form>
 </div>
+*@

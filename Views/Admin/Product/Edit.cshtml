@@ -1,3 +1,295 @@
+@model GCTWeb.Models.ViewModels.ProductEditViewModel
+
+@{
+    ViewData["Title"] = "Edit Product";
+    Layout = "../Shared/_LayoutAdmin.cshtml";
+}
+
+<h1>Edit Product</h1>
+<h4>@Model.Name</h4>
+<hr />
+<div class="row">
+    <div class="col-md-8">
+        <form asp-action="ProductEdit" asp-route-id="@Model.ProductId" method="post" enctype="multipart/form-data" id="editProductForm">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="ProductId" />
+
+            @* Các trường input giống như Create.cshtml, nhưng có giá trị ban đầu từ Model *@
+            <div class="form-group mb-3">
+                <label asp-for="Name" class="control-label"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-3">
+                <label asp-for="Sku" class="control-label"></label>
+                <input asp-for="Sku" class="form-control" />
+                <span asp-validation-for="Sku" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-3">
+                <label asp-for="BrandId" class="control-label"></label>
+                <select asp-for="BrandId" class="form-control" asp-items="Model.Brands">
+                    <option value="">-- Select Brand --</option>
+                </select>
+                <span asp-validation-for="BrandId" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-3">
+                <label asp-for="CategoryId" class="control-label"></label>
+                <select asp-for="CategoryId" class="form-control" asp-items="Model.Categories">
+                    <option value="">-- Select Category --</option>
+                </select>
+                <span asp-validation-for="CategoryId" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-3">
+                <label asp-for="GradeId" class="control-label"></label>
+                <select asp-for="GradeId" class="form-control" asp-items="Model.Grades">
+                    <option value="">-- Select Grade --</option>
+                </select>
+                <span asp-validation-for="GradeId" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-3">
+                <label asp-for="Price" class="control-label"></label>
+                <input asp-for="Price" class="form-control" />
+                <span asp-validation-for="Price" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-3">
+                <label asp-for="Stock" class="control-label"></label>
+                <input asp-for="Stock" class="form-control" />
+                <span asp-validation-for="Stock" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-3">
+                <label asp-for="Description" class="control-label"></label>
+                <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+            <div class="form-group form-check  mb-3">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="IsActive" /> @Html.DisplayNameFor(model => model.IsActive)
+                </label>
+            </div>
+
+
+            @* --- Quản lý ảnh hiện có --- *@
+            <div class="mb-3">
+                <h5>Existing Images</h5>
+                @if (Model.ExistingImages != null && Model.ExistingImages.Any())
+                {
+                    <div class="d-flex flex-wrap gap-3" id="existingImagesContainer">
+                        @foreach (var img in Model.ExistingImages)
+                        {
+                            <div class="existing-image-wrapper border p-2 rounded text-center" style="width: 150px;">
+                                <img src="@Url.Content(img.ImageUrl)" alt="@(img.AltText ?? "Product Image")" class="img-thumbnail mb-2" style="width:100px; height:100px; object-fit:cover;" />
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="MakeExistingImagePrimaryId" id="existing_@img.ImageId" value="@img.ImageId" @(img.IsPrimary ? "checked" : "") />
+                                    <label class="form-check-label small" for="existing_@img.ImageId">
+                                        Set Primary
+                                    </label>
+                                </div>
+                                <div class="form-check mt-1">
+                                    <input class="form-check-input image-to-delete-checkbox" type="checkbox" name="ImagesToDelete" value="@img.ImageId" id="delete_@img.ImageId" />
+                                    <label class="form-check-label small text-danger" for="delete_@img.ImageId">
+                                        Delete
+                                    </label>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p>No existing images.</p>
+                }
+            </div>
+
+            @* --- Thêm ảnh mới --- *@
+            <div class="form-group mb-3">
+                <label asp-for="NewImages" class="control-label"></label>
+                <input asp-for="NewImages" type="file" class="form-control" multiple id="imageUploadInput" accept="image/*" />
+                <span asp-validation-for="NewImages" class="text-danger"></span>
+            </div>
+
+            @* Input ẩn để lưu index của ảnh MỚI được chọn làm chính *@
+            <input type="hidden" asp-for="SelectedNewPrimaryImageIndex" id="selectedNewPrimaryImageIndexInput" />
+
+            <div id="newImagePreviewContainer" class="mb-3 d-flex flex-wrap gap-3">
+                @* Preview ảnh mới sẽ hiển thị ở đây *@
+            </div>
+
+
+            <div class="form-group">
+                <input type="submit" value="Save Changes" class="btn btn-primary" />
+                <a asp-action="ProductIndex" class="btn btn-secondary">Back to List</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        $(document).ready(function () {
+            const newImageUploadInput = document.getElementById('imageUploadInput');
+            const newImagePreviewContainer = document.getElementById('newImagePreviewContainer');
+            const selectedNewPrimaryImageIndexInput = document.getElementById('selectedNewPrimaryImageIndexInput');
+            let newSelectedFiles = []; // Chỉ chứa các file mới được chọn
+
+            $(newImageUploadInput).on('change', function (event) {
+                const newlyAddedFiles = Array.from(event.target.files);
+                newlyAddedFiles.forEach(file => {
+                    if (!newSelectedFiles.some(sf => sf.name === file.name && sf.size === file.size && sf.lastModified === file.lastModified)) {
+                        newSelectedFiles.push(file);
+                    }
+                });
+                renderNewImagePreviews();
+                updateNewImageFileInput();
+            });
+
+            function renderNewImagePreviews() {
+                newImagePreviewContainer.innerHTML = '';
+                let currentNewPrimaryIndex = selectedNewPrimaryImageIndexInput.value !== "" ? parseInt(selectedNewPrimaryImageIndexInput.value, 10) : null;
+
+                newSelectedFiles.forEach((file, index) => {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const previewWrapper = document.createElement('div');
+                        previewWrapper.classList.add('position-relative', 'border', 'p-1', 'rounded', 'text-center');
+                        previewWrapper.style.width = '120px';
+
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.classList.add('img-thumbnail', 'mb-1');
+                        img.style.width = '100px';
+                        img.style.height = '100px';
+                        img.style.objectFit = 'cover';
+                        img.alt = file.name;
+
+                        const removeBtn = document.createElement('button');
+                        removeBtn.type = 'button';
+                        removeBtn.classList.add('btn', 'btn-danger', 'btn-sm', 'position-absolute');
+                        removeBtn.innerHTML = '×';
+                        removeBtn.style.top = '2px';
+                        removeBtn.style.right = '2px';
+                        removeBtn.style.lineHeight = '1';
+                        removeBtn.style.padding = '0.1rem 0.3rem';
+                        removeBtn.onclick = function () { removeNewFile(index); };
+
+                        const radioLabel = document.createElement('label');
+                        radioLabel.classList.add('form-check-label', 'd-block');
+                        radioLabel.style.fontSize = '0.8rem';
+
+                        const radioInput = document.createElement('input');
+                        radioInput.type = 'radio';
+                        radioInput.name = 'primaryImageSelector'; // CHUNG name với radio của ảnh cũ
+                        radioInput.classList.add('form-check-input', 'me-1');
+                        radioInput.value = "new_" + index; // Phân biệt giá trị với ảnh cũ
+
+                        // Chỉ check nếu không có ảnh cũ nào được chọn làm primary
+                        // và SelectedNewPrimaryImageIndex khớp
+                        if (currentNewPrimaryIndex === index && $('input[name="MakeExistingImagePrimaryId"]:checked').length === 0) {
+                            radioInput.checked = true;
+                        }
+
+                        radioInput.onchange = function() {
+                            if (this.checked) {
+                                selectedNewPrimaryImageIndexInput.value = index.toString();
+                                // Bỏ check tất cả radio của ảnh cũ
+                                $('input[name="MakeExistingImagePrimaryId"]').prop('checked', false);
+                                console.log("New primary index selected: " + index);
+                            }
+                        };
+
+                        radioLabel.appendChild(radioInput);
+                        radioLabel.appendChild(document.createTextNode('Set Primary'));
+
+                        previewWrapper.appendChild(removeBtn);
+                        previewWrapper.appendChild(img);
+                        previewWrapper.appendChild(radioLabel);
+                        newImagePreviewContainer.appendChild(previewWrapper);
+                    }
+                    reader.readAsDataURL(file);
+                });
+
+                // Tự động chọn ảnh chính (nếu chưa có)
+                autoSelectPrimaryAfterRender();
+            }
+
+            function removeNewFile(indexToRemove) {
+                newSelectedFiles.splice(indexToRemove, 1);
+                let currentNewPrimaryIndex = selectedNewPrimaryImageIndexInput.value !== "" ? parseInt(selectedNewPrimaryImageIndexInput.value, 10) : null;
+
+                if (currentNewPrimaryIndex !== null) {
+                    if (indexToRemove === currentNewPrimaryIndex) {
+                        selectedNewPrimaryImageIndexInput.value = '';
+                    } else if (indexToRemove < currentNewPrimaryIndex) {
+                        selectedNewPrimaryImageIndexInput.value = (currentNewPrimaryIndex - 1).toString();
+                    }
+                }
+                renderNewImagePreviews();
+                updateNewImageFileInput();
+            }
+
+            function updateNewImageFileInput() {
+                const dataTransfer = new DataTransfer();
+                newSelectedFiles.forEach(file => { dataTransfer.items.add(file); });
+                newImageUploadInput.files = dataTransfer.files;
+                if ($.validator && $(newImageUploadInput).closest('form').data('validator')) {
+                    $(newImageUploadInput).valid();
+                }
+            }
+
+            // Xử lý khi chọn radio button của ảnh CŨ
+            $('input[name="MakeExistingImagePrimaryId"]').on('change', function() {
+                if (this.checked) {
+                    selectedNewPrimaryImageIndexInput.value = ''; // Xóa lựa chọn primary cho ảnh mới
+                    // Bỏ check tất cả radio của ảnh mới
+                    $('#newImagePreviewContainer input[type="radio"]').prop('checked', false);
+                    console.log("Existing primary ID selected: " + this.value);
+                }
+            });
+
+            function autoSelectPrimaryAfterRender() {
+                // Nếu không có primary nào được check (cả cũ và mới)
+                if ($('input[name="primaryImageSelector"]:checked').length === 0 && $('input[name="MakeExistingImagePrimaryId"]:checked').length === 0) {
+                    if (newSelectedFiles.length > 0) { // Ưu tiên ảnh mới đầu tiên
+                        selectedNewPrimaryImageIndexInput.value = "0";
+                        const firstNewRadio = newImagePreviewContainer.querySelector('input[type="radio"][value="new_0"]');
+                        if (firstNewRadio) firstNewRadio.checked = true;
+                    } else if ($('#existingImagesContainer input[type="radio"]').length > 0) { // Nếu không có ảnh mới, chọn ảnh cũ đầu tiên
+                        const firstExistingRadio = $('#existingImagesContainer input[type="radio"]').first();
+                        if (firstExistingRadio.length) {
+                            firstExistingRadio.prop('checked', true);
+                            // Input ẩn MakeExistingImagePrimaryId sẽ tự động có giá trị từ radio này
+                        }
+                    }
+                }
+            }
+
+            $('#editProductForm').on('submit', function() {
+                // Đảm bảo có một primary được chọn nếu có ảnh
+                if ((newSelectedFiles.length > 0 || $('#existingImagesContainer .existing-image-wrapper:not(:has(.image-to-delete-checkbox:checked))').length > 0) &&
+                    $('input[name="primaryImageSelector"]:checked').length === 0 && $('input[name="MakeExistingImagePrimaryId"]:checked').length === 0) {
+
+                    if (newSelectedFiles.length > 0) {
+                        selectedNewPrimaryImageIndexInput.value = "0";
+                    } else {
+                        // Chọn ảnh cũ đầu tiên không bị đánh dấu xóa làm primary
+                        const firstAvailableExisting = $('#existingImagesContainer .existing-image-wrapper:not(:has(.image-to-delete-checkbox:checked)) input[name="MakeExistingImagePrimaryId"]').first();
+                        if(firstAvailableExisting.length) {
+                            // MakeExistingImagePrimaryId đã có value, chỉ cần set checked
+                            // Input hidden không cần set ở đây vì nó bind với radio button
+                        }
+                    }
+                }
+                updateNewImageFileInput();
+            });
+
+            // Gọi lần đầu để thiết lập trạng thái ban đầu (nếu có ảnh mới từ lần load trước bị lỗi)
+            renderNewImagePreviews();
+        });
+    </script>
+}
+
+@*
 @model GCTWeb.Models.Product
 
 @{
@@ -87,3 +379,4 @@
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }
+*@

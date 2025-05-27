@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using GCTWeb.Models.ViewModels;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace GCTWeb.Controllers.Admin;
@@ -217,6 +218,330 @@ public class AdminController : Controller {
             "CategoryId", "CategoryName", viewModel.CategoryId);
         viewModel.Grades = new SelectList(await _context.Grades.OrderBy(g => g.GradeName).ToListAsync(), "GradeId",
             "GradeName", viewModel.GradeId);
+    }
+    
+    [Route("Admin/Products/Edit/{id:guid}")] // Route cho Edit GET
+    public async Task<IActionResult> ProductEdit(Guid id)
+    {
+        if (id == Guid.Empty)
+        {
+            return NotFound();
+        }
+
+        var product = await _context.Products
+                                    .Include(p => p.ProductImages) // Quan trọng: Tải ảnh hiện có
+                                    .FirstOrDefaultAsync(p => p.ProductId == id);
+
+        if (product == null)
+        {
+            return NotFound();
+        }
+
+        var viewModel = new ProductEditViewModel
+        {
+            ProductId = product.ProductId,
+            Name = product.Name,
+            Sku = product.Sku,
+            BrandId = product.BrandId,
+            CategoryId = product.CategoryId,
+            GradeId = product.GradeId,
+            Price = product.Price,
+            Stock = product.Stock,
+            Description = product.Description,
+            IsActive = product.IsActive,
+            ExistingImages = product.ProductImages.Select(pi => new ProductImageViewModel
+            {
+                ImageId = pi.ImageId,
+                ImageUrl = pi.ImageUrl,
+                AltText = pi.AltText,
+                IsPrimary = pi.ImageId == product.PrimaryImageId // Xác định ảnh chính hiện tại
+            }).ToList(),
+            MakeExistingImagePrimaryId = product.PrimaryImageId, // Giá trị ban đầu cho radio button
+            Brands = new SelectList(await _context.Brands.OrderBy(b => b.BrandName).ToListAsync(), "BrandId", "BrandName", product.BrandId),
+            Categories = new SelectList(await _context.Categories.OrderBy(c => c.CategoryName).ToListAsync(), "CategoryId", "CategoryName", product.CategoryId),
+            Grades = new SelectList(await _context.Grades.OrderBy(g => g.GradeName).ToListAsync(), "GradeId", "GradeName", product.GradeId)
+        };
+
+        return View("../Admin/Product/Edit", viewModel); // Đường dẫn đến View Edit
+    }
+
+    // POST: Admin/Products/Edit/{id}
+    [HttpPost]
+    [Route("Admin/Products/Edit/{id:guid}")] // Route cho Edit POST
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ProductEdit(Guid id, ProductEditViewModel viewModel)
+    {
+        if (id != viewModel.ProductId)
+        {
+            return NotFound();
+        }
+
+        // Loại bỏ các thuộc tính không post lại từ model state
+        ModelState.Remove("Brands");
+        ModelState.Remove("Categories");
+        ModelState.Remove("Grades");
+        ModelState.Remove("ExistingImages"); // Vì ExistingImages chỉ để hiển thị
+
+        if (ModelState.IsValid)
+        {
+            var productToUpdate = await _context.Products
+                                                .Include(p => p.ProductImages) // Quan trọng: Tải ảnh hiện có để xử lý
+                                                .FirstOrDefaultAsync(p => p.ProductId == viewModel.ProductId);
+
+            if (productToUpdate == null)
+            {
+                return NotFound("Product not found for update.");
+            }
+
+            // Cập nhật thông tin cơ bản của sản phẩm
+            productToUpdate.Name = viewModel.Name;
+            productToUpdate.Sku = viewModel.Sku;
+            productToUpdate.BrandId = viewModel.BrandId;
+            productToUpdate.CategoryId = viewModel.CategoryId;
+            productToUpdate.GradeId = viewModel.GradeId;
+            productToUpdate.Price = viewModel.Price;
+            productToUpdate.Stock = viewModel.Stock;
+            productToUpdate.Description = viewModel.Description;
+            productToUpdate.IsActive = viewModel.IsActive;
+            productToUpdate.UpdatedAt = DateTime.UtcNow;
+
+            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "product-images");
+            if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+            // 1. Xóa ảnh cũ được chọn để xóa
+            if (viewModel.ImagesToDelete != null && viewModel.ImagesToDelete.Any())
+            {
+                foreach (var imageIdToDelete in viewModel.ImagesToDelete)
+                {
+                    var imageToDelete = productToUpdate.ProductImages.FirstOrDefault(pi => pi.ImageId == imageIdToDelete);
+                    if (imageToDelete != null)
+                    {
+                        // Xóa file vật lý
+                        if (!string.IsNullOrEmpty(imageToDelete.ImageUrl))
+                        {
+                            var serverFileName = Path.GetFileName(imageToDelete.ImageUrl); // Lấy tên file từ URL
+                            var physicalPath = Path.Combine(uploadsFolder, serverFileName);
+                            if (System.IO.File.Exists(physicalPath))
+                            {
+                                try { System.IO.File.Delete(physicalPath); }
+                                catch (Exception ex) { Console.WriteLine($"Error deleting file {physicalPath}: {ex.Message}"); }
+                            }
+                        }
+                        _context.ProductImages.Remove(imageToDelete); // Xóa khỏi context
+                        productToUpdate.ProductImages.Remove(imageToDelete); // Xóa khỏi collection của product
+
+                        // Nếu ảnh bị xóa là ảnh chính, đặt lại PrimaryImageId
+                        if (productToUpdate.PrimaryImageId == imageIdToDelete)
+                        {
+                            productToUpdate.PrimaryImageId = null;
+                        }
+                    }
+                }
+            }
+
+            // 2. Thêm ảnh mới
+            var newlyAddedImages = new List<ProductImage>();
+            if (viewModel.NewImages != null && viewModel.NewImages.Any())
+            {
+                for (int i = 0; i < viewModel.NewImages.Count; i++)
+                {
+                    var imageFile = viewModel.NewImages[i];
+                    if (imageFile != null && imageFile.Length > 0)
+                    {
+                        // (Thêm validation file extension, size tương tự như Create)
+                        var fileExtension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
+                        var serverFileName = Guid.NewGuid().ToString() + fileExtension;
+                        var filePath = Path.Combine(uploadsFolder, serverFileName);
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await imageFile.CopyToAsync(fileStream);
+                        }
+
+                        var newProductImage = new ProductImage
+                        {
+                            ImageId = Guid.NewGuid(),
+                            ProductId = productToUpdate.ProductId,
+                            ImageUrl = "/uploads/product-images/" + serverFileName,
+                            AltText = productToUpdate.Name,
+                            IsPrimary = false, // Sẽ được xử lý sau
+                            CreatedAt = DateTime.UtcNow
+                        };
+                        newlyAddedImages.Add(newProductImage);
+                        _context.ProductImages.Add(newProductImage); // Thêm vào context
+                        // productToUpdate.ProductImages.Add(newProductImage); // Hoặc thêm vào collection
+                    }
+                }
+            }
+
+            // 3. Xử lý ảnh chính
+            // Ưu tiên: Ảnh mới được chọn làm chính > Ảnh cũ được chọn làm chính > Ảnh mới đầu tiên > Ảnh cũ đầu tiên
+            
+            // Reset tất cả ảnh hiện có (trong DB) và ảnh mới về Not Primary
+            foreach (var img in productToUpdate.ProductImages) img.IsPrimary = false;
+            foreach (var img in newlyAddedImages) img.IsPrimary = false;
+
+            ProductImage? finalPrimaryImage = null;
+
+            if (viewModel.SelectedNewPrimaryImageIndex.HasValue && newlyAddedImages.Count > viewModel.SelectedNewPrimaryImageIndex.Value)
+            {
+                // Người dùng chọn một ảnh MỚI làm chính
+                finalPrimaryImage = newlyAddedImages[viewModel.SelectedNewPrimaryImageIndex.Value];
+            }
+            else if (viewModel.MakeExistingImagePrimaryId.HasValue)
+            {
+                // Người dùng chọn một ảnh CŨ làm chính
+                finalPrimaryImage = productToUpdate.ProductImages.FirstOrDefault(pi => pi.ImageId == viewModel.MakeExistingImagePrimaryId.Value);
+                if(finalPrimaryImage == null && newlyAddedImages.Any()){ // Có thể ảnh cũ đã bị xóa, thử tìm trong ảnh mới (ít xảy ra)
+                     finalPrimaryImage = newlyAddedImages.FirstOrDefault(pi => pi.ImageId == viewModel.MakeExistingImagePrimaryId.Value);
+                }
+            }
+            
+            // Nếu không có lựa chọn cụ thể, nhưng có ảnh mới, chọn ảnh mới đầu tiên
+            if (finalPrimaryImage == null && newlyAddedImages.Any())
+            {
+                finalPrimaryImage = newlyAddedImages.First();
+            }
+
+            // Nếu vẫn không có, nhưng còn ảnh cũ, chọn ảnh cũ đầu tiên
+            if (finalPrimaryImage == null && productToUpdate.ProductImages.Any(pi => ! (viewModel.ImagesToDelete ?? new List<Guid>()).Contains(pi.ImageId) ))
+            {
+                finalPrimaryImage = productToUpdate.ProductImages.Where(pi => !(viewModel.ImagesToDelete ?? new List<Guid>()).Contains(pi.ImageId)).OrderBy(pi => pi.CreatedAt).FirstOrDefault();
+            }
+
+
+            if (finalPrimaryImage != null)
+            {
+                finalPrimaryImage.IsPrimary = true;
+                productToUpdate.PrimaryImageId = finalPrimaryImage.ImageId;
+            }
+            else
+            {
+                // Không còn ảnh nào -> PrimaryImageId là null
+                productToUpdate.PrimaryImageId = null;
+            }
+
+            try
+            {
+                _context.Update(productToUpdate); // Đánh dấu product là modified
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Product updated successfully!";
+                return RedirectToAction(nameof(ProductIndex));
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!ProductExists(viewModel.ProductId)) { return NotFound(); }
+                else { throw; }
+            }
+            catch (DbUpdateException ex)
+            {
+                Console.WriteLine($"Error updating product: {ex.ToString()}");
+                ModelState.AddModelError(string.Empty, "An error occurred while updating the product.");
+            }
+        }
+
+        // Nếu ModelState không hợp lệ hoặc có lỗi
+        viewModel.Brands = new SelectList(await _context.Brands.OrderBy(b => b.BrandName).ToListAsync(), "BrandId", "BrandName", viewModel.BrandId);
+        viewModel.Categories = new SelectList(await _context.Categories.OrderBy(c => c.CategoryName).ToListAsync(), "CategoryId", "CategoryName", viewModel.CategoryId);
+        viewModel.Grades = new SelectList(await _context.Grades.OrderBy(g => g.GradeName).ToListAsync(), "GradeId", "GradeName", viewModel.GradeId);
+        // Cần tải lại ExistingImages vì các thay đổi có thể chưa được lưu
+        if(viewModel.ProductId != Guid.Empty) { // Chỉ tải lại nếu ProductId hợp lệ
+             var productForExistingImages = await _context.Products.AsNoTracking().Include(p => p.ProductImages).FirstOrDefaultAsync(p => p.ProductId == viewModel.ProductId);
+             if(productForExistingImages != null) {
+                  viewModel.ExistingImages = productForExistingImages.ProductImages.Select(pi => new ProductImageViewModel
+                  {
+                      ImageId = pi.ImageId,
+                      ImageUrl = pi.ImageUrl,
+                      AltText = pi.AltText,
+                      IsPrimary = pi.ImageId == productForExistingImages.PrimaryImageId
+                  }).ToList();
+             }
+        }
+
+        return View("../Admin/Product/Edit", viewModel);
+    }
+
+
+    // GET: Admin/Products/Delete/{id}
+    [Route("Admin/Products/Delete/{id:guid}")] // Route cho Delete GET
+    public async Task<IActionResult> ProductDelete(Guid? id)
+    {
+        if (id == null)
+        {
+            return NotFound();
+        }
+
+        var product = await _context.Products
+            .Include(p => p.Brand) // Để hiển thị thông tin liên quan
+            .Include(p => p.Category)
+            .Include(p => p.PrimaryImage) // Hiển thị ảnh chính nếu có
+            .FirstOrDefaultAsync(m => m.ProductId == id);
+
+        if (product == null)
+        {
+            return NotFound();
+        }
+
+        return View("../Admin/Product/Delete", product); // Đường dẫn đến View Delete
+    }
+
+    // POST: Admin/Products/Delete/{id}
+    [HttpPost, ActionName("ProductDelete")] // Đặt tên ActionName để khớp với form post (nếu cần)
+    [Route("Admin/Products/Delete/{id:guid}")] // Route cho Delete POST
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ProductDeleteConfirmed(Guid id)
+    {
+        var product = await _context.Products
+                                    .Include(p => p.ProductImages) // Quan trọng: Tải tất cả ảnh để xóa file
+                                    .FirstOrDefaultAsync(p => p.ProductId == id);
+
+        if (product == null)
+        {
+            return NotFound("Product not found for deletion.");
+        }
+
+        // Xóa file ảnh trên server trước
+        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "product-images");
+        if (product.ProductImages.Any())
+        {
+            foreach (var image in product.ProductImages)
+            {
+                if (!string.IsNullOrEmpty(image.ImageUrl))
+                {
+                    var serverFileName = Path.GetFileName(image.ImageUrl);
+                    var physicalPath = Path.Combine(uploadsFolder, serverFileName);
+                    if (System.IO.File.Exists(physicalPath))
+                    {
+                        try { System.IO.File.Delete(physicalPath); }
+                        catch (Exception ex) { Console.WriteLine($"Error deleting file {physicalPath}: {ex.Message}"); /* Ghi log */ }
+                    }
+                }
+            }
+        }
+
+        // EF Core sẽ tự động xóa các ProductImage liên quan nếu bạn đã cấu hình
+        // OnDelete(DeleteBehavior.Cascade) cho mối quan hệ Product -> ProductImages.
+        // Nếu không, bạn phải xóa thủ công trước:
+        // _context.ProductImages.RemoveRange(product.ProductImages);
+
+        _context.Products.Remove(product);
+
+        try
+        {
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Product deleted successfully!";
+        }
+        catch (DbUpdateException ex)
+        {
+            Console.WriteLine($"Error deleting product: {ex.ToString()}");
+            TempData["ErrorMessage"] = "Error deleting product. It might be in use."; // Hoặc thông báo cụ thể hơn
+        }
+        
+        return RedirectToAction(nameof(ProductIndex));
+    }
+
+    private bool ProductExists(Guid id)
+    {
+        return _context.Products.Any(e => e.ProductId == id);
     }
     
     [Route("Admin/Brand")]
