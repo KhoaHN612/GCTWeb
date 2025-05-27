@@ -27,7 +27,7 @@ public class AdminController : Controller {
         return View();
     }
 
-    [Route("Admin/Products")]
+    [Route("Admin/Product")]
     public async Task<IActionResult> ProductIndex()
     {
         var applicationDbContext = _context.Products
@@ -38,7 +38,7 @@ public class AdminController : Controller {
         return View("../Admin/Product/Index", await applicationDbContext.ToListAsync());
     }
 
-    [Route("Admin/Products/Create")]
+    [Route("Admin/Product/Create")]
     public IActionResult ProductCreate()
     {
         var viewModel = new ProductCreateViewModel
@@ -52,7 +52,7 @@ public class AdminController : Controller {
     }
 
     // POST: Product/Create
-    [Route("Admin/Products/Create")]
+    [Route("Admin/Product/Create")]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ProductCreate(ProductCreateViewModel viewModel)
@@ -220,7 +220,7 @@ public class AdminController : Controller {
             "GradeName", viewModel.GradeId);
     }
     
-    [Route("Admin/Products/Edit/{id:guid}")] // Route cho Edit GET
+    [Route("Admin/Product/Edit/{id:guid}")] // Route cho Edit GET
     public async Task<IActionResult> ProductEdit(Guid id)
     {
         if (id == Guid.Empty)
@@ -265,9 +265,9 @@ public class AdminController : Controller {
         return View("../Admin/Product/Edit", viewModel); // Đường dẫn đến View Edit
     }
 
-    // POST: Admin/Products/Edit/{id}
+    // POST: Admin/Product/Edit/{id}
     [HttpPost]
-    [Route("Admin/Products/Edit/{id:guid}")] // Route cho Edit POST
+    [Route("Admin/Product/Edit/{id:guid}")] // Route cho Edit POST
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ProductEdit(Guid id, ProductEditViewModel viewModel)
     {
@@ -461,8 +461,8 @@ public class AdminController : Controller {
     }
 
 
-    // GET: Admin/Products/Delete/{id}
-    [Route("Admin/Products/Delete/{id:guid}")] // Route cho Delete GET
+    // GET: Admin/Product/Delete/{id}
+    [Route("Admin/Product/Delete/{id:guid}")] // Route cho Delete GET
     public async Task<IActionResult> ProductDelete(Guid? id)
     {
         if (id == null)
@@ -484,9 +484,9 @@ public class AdminController : Controller {
         return View("../Admin/Product/Delete", product); // Đường dẫn đến View Delete
     }
 
-    // POST: Admin/Products/Delete/{id}
+    // POST: Admin/Product/Delete/{id}
     [HttpPost, ActionName("ProductDelete")] // Đặt tên ActionName để khớp với form post (nếu cần)
-    [Route("Admin/Products/Delete/{id:guid}")] // Route cho Delete POST
+    [Route("Admin/Product/Delete/{id:guid}")] // Route cho Delete POST
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ProductDeleteConfirmed(Guid id)
     {
