@@ -42,13 +42,26 @@ namespace GCTWeb.Controllers_
                 .Include(p => p.Brand)
                 .Include(p => p.Category)
                 .Include(p => p.Grade)
-                .Include(p => p.PrimaryImage)
-                .FirstOrDefaultAsync(m => m.ProductId == id);
+                .Include(p => p.ProductImages) 
+                .FirstOrDefaultAsync(m => m.ProductId == id && m.IsActive); 
+
             if (product == null)
             {
                 return NotFound();
             }
-
+            
+            if (product.ProductImages.Any() && product.PrimaryImageId.HasValue)
+            {
+                product.ProductImages = product.ProductImages
+                    .OrderByDescending(img => img.ImageId == product.PrimaryImageId)
+                    .ThenBy(img => img.CreatedAt) 
+                    .ToList();
+            }
+            else if (product.ProductImages.Any())
+            {
+                product.ProductImages = product.ProductImages.OrderBy(img => img.CreatedAt).ToList();
+            }
+            
             return View(product);
         }
 
