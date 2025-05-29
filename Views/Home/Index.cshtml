@@ -1,4 +1,6 @@
-﻿@{
+﻿@model IEnumerable<Product>
+
+@{
     ViewData["Title"] = "Home";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
@@ -305,9 +307,9 @@
 
                         <ul>
                             <li class="p-b-6">
-									<span class="fs-15 lh-12 m-r-6" style="color: #222;">
-										<i class="zmdi zmdi-circle"></i>
-									</span>
+                                <span class="fs-15 lh-12 m-r-6" style="color: #222;">
+                                    <i class="zmdi zmdi-circle"></i>
+                                </span>
 
                                 <a href="~/#" class="filter-link stext-106 trans-04">
                                     Black
@@ -315,9 +317,9 @@
                             </li>
 
                             <li class="p-b-6">
-									<span class="fs-15 lh-12 m-r-6" style="color: #4272d7;">
-										<i class="zmdi zmdi-circle"></i>
-									</span>
+                                <span class="fs-15 lh-12 m-r-6" style="color: #4272d7;">
+                                    <i class="zmdi zmdi-circle"></i>
+                                </span>
 
                                 <a href="~/#" class="filter-link stext-106 trans-04 filter-link-active">
                                     Blue
@@ -325,9 +327,9 @@
                             </li>
 
                             <li class="p-b-6">
-									<span class="fs-15 lh-12 m-r-6" style="color: #b3b3b3;">
-										<i class="zmdi zmdi-circle"></i>
-									</span>
+                                <span class="fs-15 lh-12 m-r-6" style="color: #b3b3b3;">
+                                    <i class="zmdi zmdi-circle"></i>
+                                </span>
 
                                 <a href="~/#" class="filter-link stext-106 trans-04">
                                     Grey
@@ -335,9 +337,9 @@
                             </li>
 
                             <li class="p-b-6">
-									<span class="fs-15 lh-12 m-r-6" style="color: #00ad5f;">
-										<i class="zmdi zmdi-circle"></i>
-									</span>
+                                <span class="fs-15 lh-12 m-r-6" style="color: #00ad5f;">
+                                    <i class="zmdi zmdi-circle"></i>
+                                </span>
 
                                 <a href="~/#" class="filter-link stext-106 trans-04">
                                     Green
@@ -345,9 +347,9 @@
                             </li>
 
                             <li class="p-b-6">
-									<span class="fs-15 lh-12 m-r-6" style="color: #fa4251;">
-										<i class="zmdi zmdi-circle"></i>
-									</span>
+                                <span class="fs-15 lh-12 m-r-6" style="color: #fa4251;">
+                                    <i class="zmdi zmdi-circle"></i>
+                                </span>
 
                                 <a href="~/#" class="filter-link stext-106 trans-04">
                                     Red
@@ -355,9 +357,9 @@
                             </li>
 
                             <li class="p-b-6">
-									<span class="fs-15 lh-12 m-r-6" style="color: #aaa;">
-										<i class="zmdi zmdi-circle-o"></i>
-									</span>
+                                <span class="fs-15 lh-12 m-r-6" style="color: #aaa;">
+                                    <i class="zmdi zmdi-circle-o"></i>
+                                </span>
 
                                 <a href="~/#" class="filter-link stext-106 trans-04">
                                     White
@@ -398,524 +400,410 @@
         </div>
 
         <div class="row isotope-grid">
-            <div class="col-sm-6 col-md-4 col-lg-3 p-b-35 isotope-item women">
-                <!-- Block2 -->
-                <div class="block2">
-                    <div class="block2-pic hov-img0">
-                        <img src="images/product-01.jpg" alt="IMG-PRODUCT">
+            @if (Model != null && Model.Any())
+            {
+                @foreach (var item in Model)
+                {
+                    var categoryClassName = "default-product-class";
+                    if (item.Category != null && !string.IsNullOrEmpty(item.Category.CategoryName))
+                    {
+                        categoryClassName = item.Category.CategoryName
+                            .ToLower()
+                            .Replace(" ", "-")
+                            .Replace("&", "and");
+                    }
 
-                        <a href="~/#" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04 js-show-modal1">
-                            Xem nhanh
-                        </a>
-                    </div>
+                    <div class="col-sm-6 col-md-4 col-lg-3 p-b-35 isotope-item @categoryClassName">
+                        <!-- Block2 -->
+                        <div class="block2">
+                            <div class="block2-pic hov-img0">
+                                @{
+                                    var imgUrl = "~/images/placeholder.png"; // Ảnh mặc định
+                                    if (item.PrimaryImage != null && !string.IsNullOrEmpty(item.PrimaryImage.ImageUrl))
+                                    {
+                                        imgUrl = item.PrimaryImage.ImageUrl;
+                                    }
+                                }
+                                <img src="@Url.Content(imgUrl)" alt="@item.Name"
+                                     style="width: 276px; height: 342px; object-fit: cover;"/> @* Thêm object-fit *@
 
-                    <div class="block2-txt flex-w flex-t p-t-14">
-                        <div class="block2-txt-child1 flex-col-l ">
-                            <a href="~/product-detail.html" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-                                Esprit Ruffle Shirt
-                            </a>
+                                @* NÚT QUICK VIEW - QUAN TRỌNG *@
+                                <a href="#"
+                                   class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04 js-show-modal1"
+                                   data-product-id="@item.ProductId"> @* DATA ATTRIBUTE *@
+                                    Quick View
+                                </a>
+                            </div>
 
-                            <span class="stext-105 cl3">
-									$16.64
-								</span>
-                        </div>
+                            <div class="block2-txt flex-w flex-t p-t-14">
+                                <div class="block2-txt-child1 flex-col-l ">
+                                    <a asp-controller="Products" asp-action="Details" asp-route-id="@item.ProductId"
+                                       class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
+                                        @Html.DisplayFor(modelItem => item.Name)
+                                    </a>
 
-                        <div class="block2-txt-child2 flex-r p-t-3">
-                            <a href="~/#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
-                                <img class="icon-heart1 dis-block trans-04" src="images/icons/icon-heart-01.png" alt="ICON">
-                                <img class="icon-heart2 dis-block trans-04 ab-t-l" src="images/icons/icon-heart-02.png" alt="ICON">
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-sm-6 col-md-4 col-lg-3 p-b-35 isotope-item women">
-                <!-- Block2 -->
-                <div class="block2">
-                    <div class="block2-pic hov-img0">
-                        <img src="images/product-02.jpg" alt="IMG-PRODUCT">
-
-                        <a href="~/#" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04 js-show-modal1">
-                            Quick View
-                        </a>
-                    </div>
-
-                    <div class="block2-txt flex-w flex-t p-t-14">
-                        <div class="block2-txt-child1 flex-col-l ">
-                            <a href="~/product-detail.html" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-                                Herschel supply
-                            </a>
-
-                            <span class="stext-105 cl3">
-									$35.31
-								</span>
-                        </div>
-
-                        <div class="block2-txt-child2 flex-r p-t-3">
-                            <a href="~/#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
-                                <img class="icon-heart1 dis-block trans-04" src="images/icons/icon-heart-01.png" alt="ICON">
-                                <img class="icon-heart2 dis-block trans-04 ab-t-l" src="images/icons/icon-heart-02.png" alt="ICON">
-                            </a>
+                                    <span class="stext-105 cl3">
+                                        @item.Price.ToString("N0") VND @* Định dạng giá *@
+                                    </span>
+                                </div>
+                                @* ... (Nút Wishlist) ... *@
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
+                }
+            }
+            else
+            {
+                <p>No products available at the moment.</p>
+            }
 
-            <div class="col-sm-6 col-md-4 col-lg-3 p-b-35 isotope-item men">
-                <!-- Block2 -->
-                <div class="block2">
-                    <div class="block2-pic hov-img0">
-                        <img src="images/product-03.jpg" alt="IMG-PRODUCT">
+        </div>
+        
+        <!-- Modal1 -->
+        <div class="wrap-modal1 js-modal1 p-t-60 p-b-20"> @* Đã có js-modal1 *@
+            <div class="overlay-modal1 js-hide-modal1"></div>
 
-                        <a href="~/#" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04 js-show-modal1">
-                            Quick View
-                        </a>
-                    </div>
+            <div class="container">
+                <div class="bg0 p-t-60 p-b-30 p-lr-15-lg how-pos3-parent">
+                    <button class="how-pos3 hov3 trans-04 js-hide-modal1">
+                        <img src="@Url.Content("~/images/icons/icon-close.png")" alt="CLOSE">
+                    </button>
 
-                    <div class="block2-txt flex-w flex-t p-t-14">
-                        <div class="block2-txt-child1 flex-col-l ">
-                            <a href="~/product-detail.html" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-                                Only Check Trouser
-                            </a>
+                    <div class="row">
+                        <div class="col-md-6 col-lg-7 p-b-30">
+                            <div class="p-l-25 p-r-30 p-lr-0-lg">
+                                <div class="wrap-slick3 flex-sb flex-w">
+                                    <div class="wrap-slick3-dots js-modal-slick-dots"></div> @* Class để target *@
+                                    <div
+                                        class="wrap-slick3-arrows flex-sb-m flex-w js-modal-slick-arrows"></div> @* Class để target *@
 
-                            <span class="stext-105 cl3">
-									$25.50
-								</span>
+                                    <div class="slick3 gallery-lb js-modal-slick-gallery"> @* Class để target *@
+                                        @* Nội dung gallery sẽ được JS điền, có thể để 1 placeholder *@
+                                        <div class="item-slick3-placeholder text-center p-5">
+                                            <i class="fa fa-spinner fa-spin fa-3x"></i>
+                                            <p>Loading images...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="block2-txt-child2 flex-r p-t-3">
-                            <a href="~/#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
-                                <img class="icon-heart1 dis-block trans-04" src="images/icons/icon-heart-01.png" alt="ICON">
-                                <img class="icon-heart2 dis-block trans-04 ab-t-l" src="images/icons/icon-heart-02.png" alt="ICON">
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-sm-6 col-md-4 col-lg-3 p-b-35 isotope-item women">
-                <!-- Block2 -->
-                <div class="block2">
-                    <div class="block2-pic hov-img0">
-                        <img src="images/product-04.jpg" alt="IMG-PRODUCT">
-
-                        <a href="~/#" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04 js-show-modal1">
-                            Quick View
-                        </a>
-                    </div>
-
-                    <div class="block2-txt flex-w flex-t p-t-14">
-                        <div class="block2-txt-child1 flex-col-l ">
-                            <a href="~/product-detail.html" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-                                Classic Trench Coat
-                            </a>
-
-                            <span class="stext-105 cl3">
-									$75.00
-								</span>
-                        </div>
-
-                        <div class="block2-txt-child2 flex-r p-t-3">
-                            <a href="~/#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
-                                <img class="icon-heart1 dis-block trans-04" src="images/icons/icon-heart-01.png" alt="ICON">
-                                <img class="icon-heart2 dis-block trans-04 ab-t-l" src="images/icons/icon-heart-02.png" alt="ICON">
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-sm-6 col-md-4 col-lg-3 p-b-35 isotope-item women">
-                <!-- Block2 -->
-                <div class="block2">
-                    <div class="block2-pic hov-img0">
-                        <img src="images/product-05.jpg" alt="IMG-PRODUCT">
-
-                        <a href="~/#" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04 js-show-modal1">
-                            Quick View
-                        </a>
-                    </div>
-
-                    <div class="block2-txt flex-w flex-t p-t-14">
-                        <div class="block2-txt-child1 flex-col-l ">
-                            <a href="~/product-detail.html" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-                                Front Pocket Jumper
-                            </a>
-
-                            <span class="stext-105 cl3">
-									$34.75
-								</span>
-                        </div>
-
-                        <div class="block2-txt-child2 flex-r p-t-3">
-                            <a href="~/#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
-                                <img class="icon-heart1 dis-block trans-04" src="images/icons/icon-heart-01.png" alt="ICON">
-                                <img class="icon-heart2 dis-block trans-04 ab-t-l" src="images/icons/icon-heart-02.png" alt="ICON">
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-sm-6 col-md-4 col-lg-3 p-b-35 isotope-item watches">
-                <!-- Block2 -->
-                <div class="block2">
-                    <div class="block2-pic hov-img0">
-                        <img src="images/product-06.jpg" alt="IMG-PRODUCT">
-
-                        <a href="~/#" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04 js-show-modal1">
-                            Quick View
-                        </a>
-                    </div>
-
-                    <div class="block2-txt flex-w flex-t p-t-14">
-                        <div class="block2-txt-child1 flex-col-l ">
-                            <a href="~/product-detail.html" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-                                Vintage Inspired Classic
-                            </a>
-
-                            <span class="stext-105 cl3">
-									$93.20
-								</span>
-                        </div>
-
-                        <div class="block2-txt-child2 flex-r p-t-3">
-                            <a href="~/#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
-                                <img class="icon-heart1 dis-block trans-04" src="images/icons/icon-heart-01.png" alt="ICON">
-                                <img class="icon-heart2 dis-block trans-04 ab-t-l" src="images/icons/icon-heart-02.png" alt="ICON">
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-sm-6 col-md-4 col-lg-3 p-b-35 isotope-item women">
-                <!-- Block2 -->
-                <div class="block2">
-                    <div class="block2-pic hov-img0">
-                        <img src="images/product-07.jpg" alt="IMG-PRODUCT">
-
-                        <a href="~/#" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04 js-show-modal1">
-                            Quick View
-                        </a>
-                    </div>
-
-                    <div class="block2-txt flex-w flex-t p-t-14">
-                        <div class="block2-txt-child1 flex-col-l ">
-                            <a href="~/product-detail.html" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-                                Shirt in Stretch Cotton
-                            </a>
-
-                            <span class="stext-105 cl3">
-									$52.66
-								</span>
-                        </div>
-
-                        <div class="block2-txt-child2 flex-r p-t-3">
-                            <a href="~/#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
-                                <img class="icon-heart1 dis-block trans-04" src="images/icons/icon-heart-01.png" alt="ICON">
-                                <img class="icon-heart2 dis-block trans-04 ab-t-l" src="images/icons/icon-heart-02.png" alt="ICON">
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-sm-6 col-md-4 col-lg-3 p-b-35 isotope-item women">
-                <!-- Block2 -->
-                <div class="block2">
-                    <div class="block2-pic hov-img0">
-                        <img src="images/product-08.jpg" alt="IMG-PRODUCT">
-
-                        <a href="~/#" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04 js-show-modal1">
-                            Quick View
-                        </a>
-                    </div>
-
-                    <div class="block2-txt flex-w flex-t p-t-14">
-                        <div class="block2-txt-child1 flex-col-l ">
-                            <a href="~/product-detail.html" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-                                Pieces Metallic Printed
-                            </a>
-
-                            <span class="stext-105 cl3">
-									$18.96
-								</span>
-                        </div>
-
-                        <div class="block2-txt-child2 flex-r p-t-3">
-                            <a href="~/#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
-                                <img class="icon-heart1 dis-block trans-04" src="images/icons/icon-heart-01.png" alt="ICON">
-                                <img class="icon-heart2 dis-block trans-04 ab-t-l" src="images/icons/icon-heart-02.png" alt="ICON">
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-sm-6 col-md-4 col-lg-3 p-b-35 isotope-item shoes">
-                <!-- Block2 -->
-                <div class="block2">
-                    <div class="block2-pic hov-img0">
-                        <img src="images/product-09.jpg" alt="IMG-PRODUCT">
-
-                        <a href="~/#" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04 js-show-modal1">
-                            Quick View
-                        </a>
-                    </div>
-
-                    <div class="block2-txt flex-w flex-t p-t-14">
-                        <div class="block2-txt-child1 flex-col-l ">
-                            <a href="~/product-detail.html" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-                                Converse All Star Hi Plimsolls
-                            </a>
-
-                            <span class="stext-105 cl3">
-									$75.00
-								</span>
-                        </div>
-
-                        <div class="block2-txt-child2 flex-r p-t-3">
-                            <a href="~/#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
-                                <img class="icon-heart1 dis-block trans-04" src="images/icons/icon-heart-01.png" alt="ICON">
-                                <img class="icon-heart2 dis-block trans-04 ab-t-l" src="images/icons/icon-heart-02.png" alt="ICON">
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-sm-6 col-md-4 col-lg-3 p-b-35 isotope-item women">
-                <!-- Block2 -->
-                <div class="block2">
-                    <div class="block2-pic hov-img0">
-                        <img src="images/product-10.jpg" alt="IMG-PRODUCT">
-
-                        <a href="~/#" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04 js-show-modal1">
-                            Quick View
-                        </a>
-                    </div>
-
-                    <div class="block2-txt flex-w flex-t p-t-14">
-                        <div class="block2-txt-child1 flex-col-l ">
-                            <a href="~/product-detail.html" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-                                Femme T-Shirt In Stripe
-                            </a>
-
-                            <span class="stext-105 cl3">
-									$25.85
-								</span>
-                        </div>
-
-                        <div class="block2-txt-child2 flex-r p-t-3">
-                            <a href="~/#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
-                                <img class="icon-heart1 dis-block trans-04" src="images/icons/icon-heart-01.png" alt="ICON">
-                                <img class="icon-heart2 dis-block trans-04 ab-t-l" src="images/icons/icon-heart-02.png" alt="ICON">
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-sm-6 col-md-4 col-lg-3 p-b-35 isotope-item men">
-                <!-- Block2 -->
-                <div class="block2">
-                    <div class="block2-pic hov-img0">
-                        <img src="images/product-11.jpg" alt="IMG-PRODUCT">
-
-                        <a href="~/#" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04 js-show-modal1">
-                            Quick View
-                        </a>
-                    </div>
-
-                    <div class="block2-txt flex-w flex-t p-t-14">
-                        <div class="block2-txt-child1 flex-col-l ">
-                            <a href="~/product-detail.html" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-                                Herschel supply
-                            </a>
-
-                            <span class="stext-105 cl3">
-									$63.16
-								</span>
-                        </div>
-
-                        <div class="block2-txt-child2 flex-r p-t-3">
-                            <a href="~/#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
-                                <img class="icon-heart1 dis-block trans-04" src="images/icons/icon-heart-01.png" alt="ICON">
-                                <img class="icon-heart2 dis-block trans-04 ab-t-l" src="images/icons/icon-heart-02.png" alt="ICON">
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-sm-6 col-md-4 col-lg-3 p-b-35 isotope-item men">
-                <!-- Block2 -->
-                <div class="block2">
-                    <div class="block2-pic hov-img0">
-                        <img src="images/product-12.jpg" alt="IMG-PRODUCT">
-
-                        <a href="~/#" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04 js-show-modal1">
-                            Quick View
-                        </a>
-                    </div>
-
-                    <div class="block2-txt flex-w flex-t p-t-14">
-                        <div class="block2-txt-child1 flex-col-l ">
-                            <a href="~/product-detail.html" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-                                Herschel supply
-                            </a>
-
-                            <span class="stext-105 cl3">
-									$63.15
-								</span>
-                        </div>
-
-                        <div class="block2-txt-child2 flex-r p-t-3">
-                            <a href="~/#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
-                                <img class="icon-heart1 dis-block trans-04" src="images/icons/icon-heart-01.png" alt="ICON">
-                                <img class="icon-heart2 dis-block trans-04 ab-t-l" src="images/icons/icon-heart-02.png" alt="ICON">
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-sm-6 col-md-4 col-lg-3 p-b-35 isotope-item women">
-                <!-- Block2 -->
-                <div class="block2">
-                    <div class="block2-pic hov-img0">
-                        <img src="images/product-13.jpg" alt="IMG-PRODUCT">
-
-                        <a href="~/#" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04 js-show-modal1">
-                            Quick View
-                        </a>
-                    </div>
-
-                    <div class="block2-txt flex-w flex-t p-t-14">
-                        <div class="block2-txt-child1 flex-col-l ">
-                            <a href="~/product-detail.html" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-                                T-Shirt with Sleeve
-                            </a>
-
-                            <span class="stext-105 cl3">
-									$18.49
-								</span>
-                        </div>
-
-                        <div class="block2-txt-child2 flex-r p-t-3">
-                            <a href="~/#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
-                                <img class="icon-heart1 dis-block trans-04" src="images/icons/icon-heart-01.png" alt="ICON">
-                                <img class="icon-heart2 dis-block trans-04 ab-t-l" src="images/icons/icon-heart-02.png" alt="ICON">
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-sm-6 col-md-4 col-lg-3 p-b-35 isotope-item women">
-                <!-- Block2 -->
-                <div class="block2">
-                    <div class="block2-pic hov-img0">
-                        <img src="images/product-14.jpg" alt="IMG-PRODUCT">
-
-                        <a href="~/#" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04 js-show-modal1">
-                            Quick View
-                        </a>
-                    </div>
-
-                    <div class="block2-txt flex-w flex-t p-t-14">
-                        <div class="block2-txt-child1 flex-col-l ">
-                            <a href="~/product-detail.html" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-                                Pretty Little Thing
-                            </a>
-
-                            <span class="stext-105 cl3">
-									$54.79
-								</span>
-                        </div>
-
-                        <div class="block2-txt-child2 flex-r p-t-3">
-                            <a href="~/#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
-                                <img class="icon-heart1 dis-block trans-04" src="images/icons/icon-heart-01.png" alt="ICON">
-                                <img class="icon-heart2 dis-block trans-04 ab-t-l" src="images/icons/icon-heart-02.png" alt="ICON">
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-sm-6 col-md-4 col-lg-3 p-b-35 isotope-item watches">
-                <!-- Block2 -->
-                <div class="block2">
-                    <div class="block2-pic hov-img0">
-                        <img src="images/product-15.jpg" alt="IMG-PRODUCT">
-
-                        <a href="~/#" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04 js-show-modal1">
-                            Quick View
-                        </a>
-                    </div>
-
-                    <div class="block2-txt flex-w flex-t p-t-14">
-                        <div class="block2-txt-child1 flex-col-l ">
-                            <a href="~/product-detail.html" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-                                Mini Silver Mesh Watch
-                            </a>
-
-                            <span class="stext-105 cl3">
-									$86.85
-								</span>
-                        </div>
-
-                        <div class="block2-txt-child2 flex-r p-t-3">
-                            <a href="~/#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
-                                <img class="icon-heart1 dis-block trans-04" src="images/icons/icon-heart-01.png" alt="ICON">
-                                <img class="icon-heart2 dis-block trans-04 ab-t-l" src="images/icons/icon-heart-02.png" alt="ICON">
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-sm-6 col-md-4 col-lg-3 p-b-35 isotope-item women">
-                <!-- Block2 -->
-                <div class="block2">
-                    <div class="block2-pic hov-img0">
-                        <img src="images/product-16.jpg" alt="IMG-PRODUCT">
-
-                        <a href="~/#" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04 js-show-modal1">
-                            Quick View
-                        </a>
-                    </div>
-
-                    <div class="block2-txt flex-w flex-t p-t-14">
-                        <div class="block2-txt-child1 flex-col-l ">
-                            <a href="~/product-detail.html" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-                                Square Neck Back
-                            </a>
-
-                            <span class="stext-105 cl3">
-									$29.64
-								</span>
-                        </div>
-
-                        <div class="block2-txt-child2 flex-r p-t-3">
-                            <a href="~/#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
-                                <img class="icon-heart1 dis-block trans-04" src="images/icons/icon-heart-01.png" alt="ICON">
-                                <img class="icon-heart2 dis-block trans-04 ab-t-l" src="images/icons/icon-heart-02.png" alt="ICON">
-                            </a>
+                        <div class="col-md-6 col-lg-5 p-b-30">
+                            <div class="p-r-50 p-t-5 p-lr-0-lg">
+                                <h4 class="mtext-105 cl2 js-name-detail p-b-14" id="modalProductName">
+                                    {Product Name} @* Placeholder *@
+                                </h4>
+
+                                <span class="mtext-106 cl2" id="modalProductPrice">
+                                    {Price} @* Placeholder *@
+                                </span>
+
+                                <p class="stext-102 cl3 p-t-23" id="modalProductDescription">
+                                    {Description} @* Placeholder *@
+                                </p>
+
+                                <div class="p-t-33">
+                                    @* Các lựa chọn Size, Color có thể được điền động nếu API trả về *@
+                                    <div class="flex-w flex-r-m p-b-10" id="modalSizeContainer" style="display:none;">
+                                        <div class="size-203 flex-c-m respon6">Size</div>
+                                        <div class="size-204 respon6-next">
+                                            <div class="rs1-select2 bor8 bg0">
+                                                <select class="js-select2-modal" name="modal_size" id="modalProductSize">
+                                                    <option>Choose an option</option>
+                                                </select>
+                                                <div class="dropDownSelect2"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex-w flex-r-m p-b-10" id="modalColorContainer" style="display:none;">
+                                        <div class="size-203 flex-c-m respon6">Color</div>
+                                        <div class="size-204 respon6-next">
+                                            <div class="rs1-select2 bor8 bg0">
+                                                <select class="js-select2-modal" name="modal_color" id="modalProductColor">
+                                                    <option>Choose an option</option>
+                                                </select>
+                                                <div class="dropDownSelect2"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex-w flex-r-m p-b-10">
+                                        <div class="size-204 flex-w flex-m respon6-next">
+                                            <div class="wrap-num-product flex-w m-r-20 m-tb-10">
+                                                <div class="btn-num-product-down cl8 hov-btn3 trans-04 flex-c-m">
+                                                    <i class="fs-16 zmdi zmdi-minus"></i>
+                                                </div>
+                                                <input class="mtext-104 cl3 txt-center num-product" type="number"
+                                                       name="num-product" value="1" id="modalProductQuantity">
+                                                <div class="btn-num-product-up cl8 hov-btn3 trans-04 flex-c-m">
+                                                    <i class="fs-16 zmdi zmdi-plus"></i>
+                                                </div>
+                                            </div>
+                                            <button data-product-id="" id="modalAddToCartBtn"
+                                                    class="flex-c-m stext-101 cl0 size-101 bg1 bor1 hov-btn1 p-lr-15 trans-04 js-addcart-detail">
+                                                Add to cart
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex-w flex-m p-l-100 p-t-40 respon7">
+                                    <div class="flex-m bor9 p-r-10 m-r-11">
+                                        <a href="#"
+                                           class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 js-addwish-detail tooltip100"
+                                           data-tooltip="Add to Wishlist">
+                                            <i class="zmdi zmdi-favorite"></i>
+                                        </a>
+                                    </div>
+
+                                    <a href="#" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 m-r-8 tooltip100"
+                                       data-tooltip="Facebook">
+                                        <i class="fa-brands fa-facebook"></i>
+                                    </a>
+
+                                    <a href="#" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 m-r-8 tooltip100"
+                                       data-tooltip="Twitter">
+                                        <i class="fa-brands fa-twitter"></i>
+                                    </a>
+
+                                    <a href="#" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 m-r-8 tooltip100"
+                                       data-tooltip="Google Plus">
+                                        <i class="fa-brands fa-google-plus"></i>
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
         <!-- Load more -->
         <div class="flex-c-m flex-w w-full p-t-45">
-            <a href="~/#" class="flex-c-m stext-101 cl5 size-103 bg2 bor1 hov-btn1 p-lr-15 trans-04">
-                Load More
+            <a href="~/product" class="flex-c-m stext-101 cl5 size-103 bg2 bor1 hov-btn1 p-lr-15 trans-04">
+                Xem Thêm
             </a>
         </div>
     </div>
 </section>
+
+@section Scripts {
+	@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+	@* Các script của template (jquery, bootstrap, slick, select2, ...) nên được load trước script tùy chỉnh của bạn. *@
+	@* File slick-custom.js của template có thể không cần nữa cho modal, hoặc cần được điều chỉnh. *@
+
+	<script>
+		// Đoạn script này nên nằm trong file main.js của template, hoặc bạn có thể đặt ở đây
+		// nếu main.js được load trước.
+		$(document).ready(function () {
+
+			/*==================================================================
+            [ Quick View Modal Logic ]
+            ==================================================================*/
+			var $modalQuickView = $('.js-modal1'); // Cache selector
+			var $modalSlickGallery = $modalQuickView.find('.js-modal-slick-gallery');
+			var $modalProductName = $('#modalProductName'); // Đã thêm ID trong HTML
+			var $modalProductPrice = $('#modalProductPrice'); // Đã thêm ID
+			var $modalProductDescription = $('#modalProductDescription'); // Đã thêm ID
+			var $modalAddToCartBtn = $('#modalAddToCartBtn'); // Đã thêm ID
+			var $modalProductQuantity = $('#modalProductQuantity'); // Đã thêm ID
+			var $modalProductSizeSelect = $('#modalProductSize'); // Đã thêm ID
+			var $modalProductColorSelect = $('#modalProductColor'); // Đã thêm ID
+
+
+			$('.js-show-modal1').on('click', function (e) {
+				e.preventDefault();
+				var productId = $(this).data('product-id');
+
+				if (!productId) {
+					console.error("Product ID not found for Quick View.");
+					swal("Error", "Product information is missing.", "error");
+					return;
+				}
+
+				// 1. Show Modal and Loading State
+				$modalQuickView.addClass('show-modal1');
+				$modalProductName.text('Loading...');
+				$modalProductPrice.text('');
+				$modalProductDescription.text('Fetching details...');
+				$modalAddToCartBtn.data('product-id', '').prop('disabled', true); // Disable button
+				$modalProductQuantity.val(1);
+
+				if ($modalSlickGallery.hasClass('slick-initialized')) {
+					$modalSlickGallery.slick('unslick');
+				}
+				$modalSlickGallery.html('<div class="item-slick3-placeholder text-center p-5"><i class="fa fa-spinner fa-spin fa-3x"></i><p>Loading images...</p></div>');
+
+				// 2. API Call
+				// Cập nhật URL này cho đúng API endpoint của bạn
+				var apiUrl = `api/product/${productId}/quickview`;
+
+				$.ajax({
+					url: apiUrl,
+					type: 'GET',
+					dataType: 'json',
+					success: function (response) {
+						if (response) {
+							$modalProductName.text(response.name);
+							$modalProductPrice.text(response.price.toLocaleString('vi-VN', {
+								style: 'currency',
+								currency: 'VND'
+							}));
+							$modalProductDescription.html(response.description || 'No description available.');
+							$modalAddToCartBtn.data('product-id', response.productId).prop('disabled', false);
+
+							$modalSlickGallery.empty(); // Clear loading/placeholder
+							if (response.images && response.images.length > 0) {
+								response.images.forEach(function (image) {
+									var imageUrl = `@Url.Content("~")` + (image.imageUrl || '').replace(/^\//, '');
+									var thumbUrl = `@Url.Content("~")` + (image.dataThumb || image.imageUrl || '').replace(/^\//, '');
+
+									var slideHTML = `
+                                    <div class="item-slick3" data-thumb="${thumbUrl}">
+                                        <div class="wrap-pic-w pos-relative">
+                                            <img src="${imageUrl}" alt="${image.altText || response.name}">
+                                            <a class="flex-c-m size-108 how-pos1 bor0 fs-16 cl10 bg0 hov-btn3 trans-04" href="${imageUrl}" target="_blank">
+                                                <i class="fa fa-expand"></i>
+                                            </a>
+                                        </div>
+                                    </div>`;
+									$modalSlickGallery.append(slideHTML);
+								});
+
+								// Initialize Slick Slider
+								var $arrowsContainer = $modalQuickView.find('.js-modal-slick-arrows');
+								var $dotsContainer = $modalQuickView.find('.js-modal-slick-dots');
+
+								$modalSlickGallery.slick({
+									slidesToShow: 1,
+									slidesToScroll: 1,
+									fade: true,
+									infinite: response.images.length > 1,
+									autoplay: false,
+									arrows: true,
+									appendArrows: $arrowsContainer.length ? $arrowsContainer : $modalSlickGallery.parent(),
+									prevArrow: '<button type="button" class="arrow-slick3 prev-slick3"><i class="fa fa-angle-left" aria-hidden="true"></i></button>',
+									nextArrow: '<button type="button" class="arrow-slick3 next-slick3"><i class="fa fa-angle-right" aria-hidden="true"></i></button>',
+									dots: true,
+									appendDots: $dotsContainer.length ? $dotsContainer : $modalSlickGallery.parent(),
+									dotsClass: 'slick3-dots',
+									customPaging: function (slick, index) {
+										var portrait = $(slick.$slides[index]).data('thumb');
+										if (portrait && typeof portrait === 'string') {
+											return '<img src="' + portrait.trim() + '" alt="Thumb ' + (index + 1) + '" /><div class="slick3-dot-overlay"></div>';
+										}
+										return '<a>' + (index + 1) + '</a>';
+									}
+								});
+							} else {
+								$modalSlickGallery.html('<div class="item-slick3-placeholder text-center p-3"><p>No images available.</p></div>');
+							}
+
+							// (Tùy chọn) Populate Size/Color dropdowns if API returns them
+							// Ví dụ:
+							// populateDropdown($modalProductSizeSelect, response.sizes, "Choose Size");
+							// populateDropdown($modalProductColorSelect, response.colors, "Choose Color");
+							// $modalQuickView.find('.js-select2-modal').select2({ minimumResultsForSearch: 20, dropdownParent: $(this).next('.dropDownSelect2') });
+
+
+						} else {
+							$modalProductName.text('Product Not Found');
+							$modalSlickGallery.html('<div class="item-slick3-placeholder text-center p-3 text-danger"><p>Details for this product could not be loaded.</p></div>');
+						}
+					},
+					error: function (jqXHR, textStatus, errorThrown) {
+						console.error("Quick View API Error:", textStatus, errorThrown, jqXHR.responseText);
+						$modalProductName.text('Error');
+						$modalSlickGallery.html('<div class="item-slick3-placeholder text-center p-3 text-danger"><p>An error occurred while fetching product details.</p></div>');
+						swal("Error", "Could not load product details. Please try again later.", "error");
+					}
+				});
+			});
+
+			$('.js-hide-modal1').on('click', function () {
+				$modalQuickView.removeClass('show-modal1');
+				if ($modalSlickGallery.hasClass('slick-initialized')) {
+					$modalSlickGallery.slick('unslick');
+				}
+				// Optional: Reset content if you want a clean slate next time
+				$modalSlickGallery.html('<div class="item-slick3-placeholder text-center p-5"><i class="fa fa-spinner fa-spin fa-3x"></i><p>Loading images...</p></div>');
+				$modalProductName.text('{Product Name}');
+				$modalProductPrice.text('{Price}');
+				$modalProductDescription.text('{Description}');
+			});
+
+			// --- Add to Cart from Modal ---
+			$modalAddToCartBtn.on('click', function () {
+				var productId = $(this).data('product-id');
+				var quantity = parseInt($modalProductQuantity.val()) || 1;
+				var productName = $modalProductName.text();
+				// var selectedSize = $modalProductSizeSelect.val(); // Get selected size
+				// var selectedColor = $modalProductColorSelect.val(); // Get selected color
+
+				if (productId) {
+					console.log("Adding to cart (from Quick View):",
+						{productId: productId, quantity: quantity /*, size: selectedSize, color: selectedColor */});
+
+					// TODO: Implement actual AJAX call to your Cart API
+					// $.ajax({
+					//     url: '@Url.Action("AddToCartApi", "CartApi")', // Replace with your Cart API endpoint
+					//     type: 'POST',
+					//     contentType: 'application/json',
+					//     data: JSON.stringify({
+					//         productId: productId,
+					//         quantity: quantity,
+					//         // sizeId: selectedSize, // if applicable
+					//         // colorId: selectedColor // if applicable
+					//     }),
+					//     success: function(response) {
+					//         swal(productName, "has been added to your cart!", "success");
+					//         // Update cart icon notification (you'll need a way to get total items)
+					//         // $('.icon-header-noti.js-show-cart').attr('data-notify', response.cartItemCount);
+					//         // $('.js-hide-modal1').click(); // Optionally close modal
+					//     },
+					//     error: function() {
+					//         swal("Error", "Could not add product to cart. Please try again.", "error");
+					//     }
+					// });
+					swal(productName, "is added to cart! (Simulation)", "success"); // Placeholder
+				} else {
+					swal("Error", "Product ID is missing. Cannot add to cart.", "error");
+				}
+			});
+
+			// Helper function to populate dropdowns (if needed for size/color)
+			// function populateDropdown($selectElement, items, defaultOptionText) {
+			//     $selectElement.empty().append($('<option>', { value: "", text: defaultOptionText }));
+			//     if (items && items.length > 0) {
+			//         items.forEach(function(item) {
+			//             // Assuming item has 'id' and 'name' properties, adjust as needed
+			//             $selectElement.append($('<option>', { value: item.id, text: item.name }));
+			//         });
+			//         $selectElement.parent().parent().parent().show(); // Show the size/color row
+			//     } else {
+			//          $selectElement.parent().parent().parent().hide(); // Hide if no options
+			//     }
+			// }
+
+			// Initialize other template JS if they are not self-initializing
+			// or if their targets are created dynamically by your quick view.
+			// For example, the select2 for modal:
+			$modalQuickView.find('.js-select2-modal').each(function () {
+				$(this).select2({
+					minimumResultsForSearch: 20,
+					dropdownParent: $(this).next('.dropDownSelect2') // Template specific
+				});
+			});
+
+			// Handle quantity +/- buttons in modal (template specific)
+			$modalQuickView.find('.btn-num-product-down').on('click', function () {
+				var numProduct = Number($(this).next().val());
+				if (numProduct > 1) $(this).next().val(numProduct - 1);
+			});
+			$modalQuickView.find('.btn-num-product-up').on('click', function () {
+				var numProduct = Number($(this).prev().val());
+				$(this).prev().val(numProduct + 1);
+			});
+
+
+		}); // End of $(document).ready
+	</script>
+}

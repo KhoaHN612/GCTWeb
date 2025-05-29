@@ -22,7 +22,11 @@ namespace GCTWeb.Controllers_
         // GET: Product
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.Products.Include(p => p.Brand).Include(p => p.Category).Include(p => p.Grade).Include(p => p.PrimaryImage);
+            var applicationDbContext = _context.Products
+                .Include(p => p.Brand)
+                .Include(p => p.Category)
+                .Include(p => p.Grade)
+                .Include(p => p.PrimaryImage);
             return View(await applicationDbContext.ToListAsync());
         }
 

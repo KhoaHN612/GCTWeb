@@ -6,16 +6,23 @@ namespace GCTWeb.Controllers;
 
 public class HomeController : Controller
 {
+    private readonly ApplicationDbContext _context;
     private readonly ILogger<HomeController> _logger;
 
-    public HomeController(ILogger<HomeController> logger)
+    public HomeController(ILogger<HomeController> logger,ApplicationDbContext context)
     {
         _logger = logger;
+        _context = context;
     }
 
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
-        return View();
+        var applicationDbContext = _context.Products
+            .Include(p => p.Brand)
+            .Include(p => p.Category)
+            .Include(p => p.Grade)
+            .Include(p => p.PrimaryImage);
+        return View(await applicationDbContext.ToListAsync());
     }
 
     public IActionResult Privacy()
