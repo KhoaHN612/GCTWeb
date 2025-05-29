@@ -31,7 +31,7 @@ namespace GCTWeb.Controllers_
         }
 
         // GET: Product/Details/5
-        public async Task<IActionResult> Details(Guid? id)
+        public async Task<IActionResult> Detail(Guid? id)
         {
             if (id == null)
             {
