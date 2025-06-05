@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using GCTWeb.Data;
 using GCTWeb.Models;
+using GCTWeb.Models.ViewModels;
 
 namespace GCTWeb.Controllers_
 {
@@ -20,14 +21,64 @@ namespace GCTWeb.Controllers_
         }
 
         // GET: Product
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int? categoryId, string searchTerm, string sortOption, string brandOption, string gradeOption)
         {
-            var applicationDbContext = _context.Products
+            var productsQuery = _context.Products
                 .Include(p => p.Brand)
                 .Include(p => p.Category)
                 .Include(p => p.Grade)
-                .Include(p => p.PrimaryImage);
-            return View(await applicationDbContext.ToListAsync());
+                .Include(p => p.PrimaryImage)
+                .Where(p => p.IsActive)
+                .AsQueryable();
+            
+            if (categoryId.HasValue)
+            {
+                productsQuery = productsQuery.Where(p => p.CategoryId == categoryId.Value);
+            }
+            
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                productsQuery = productsQuery.Where(p => p.Name.Contains(searchTerm) || p.Description.Contains(searchTerm));
+            }
+            
+            switch (sortOption)
+            {
+                case "price_asc":
+                    productsQuery = productsQuery.OrderBy(p => p.Price);
+                    break;
+                case "price_desc":
+                    productsQuery = productsQuery.OrderByDescending(p => p.Price);
+                    break;
+                case "newest":
+                    productsQuery = productsQuery.OrderByDescending(p => p.CreatedAt);
+                    break;
+                default:
+                    productsQuery = productsQuery.OrderBy(p => p.Name); // hoặc không sắp xếp gì cả
+                    break;
+            }
+            
+            if (!string.IsNullOrWhiteSpace(brandOption)) {
+                productsQuery = productsQuery.Where(p => p.Brand.BrandName == brandOption);
+            }
+            
+            if (!string.IsNullOrWhiteSpace(gradeOption)) {
+                productsQuery = productsQuery.Where(p => p.Grade.GradeName == gradeOption);
+            }
+            
+            var viewModel = new ProductCategoryViewModel
+            {
+                Products = await productsQuery.ToListAsync(),
+                Categories = await _context.Categories.ToListAsync(),
+                Brands = await _context.Brands.ToListAsync(),
+                Grades = await _context.Grades.ToListAsync(),
+                SelectedCategoryId = categoryId,
+                SearchTerm = searchTerm,
+                SortOption = sortOption,
+                BrandOption = brandOption,
+                GradeOption = gradeOption
+            };
+            
+            return View(viewModel);
         }
 
         // GET: Product/Details/5
@@ -76,8 +127,6 @@ namespace GCTWeb.Controllers_
         }
 
         // POST: Product/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("ProductId,Name,Sku,BrandId,CategoryId,GradeId,Price,Stock,Description,IsActive,CreatedAt,UpdatedAt,PrimaryImageId")] Product product)
@@ -121,8 +170,6 @@ namespace GCTWeb.Controllers_
         }
 
         // POST: Product/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Guid id, [Bind("ProductId,Name,Sku,BrandId,CategoryId,GradeId,Price,Stock,Description,IsActive,CreatedAt,UpdatedAt,PrimaryImageId")] Product product)

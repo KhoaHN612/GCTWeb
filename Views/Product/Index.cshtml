@@ -1,4 +1,4 @@
-﻿@model IEnumerable<Product>
+﻿@model GCTWeb.Models.ViewModels.ProductCategoryViewModel
 
 @{
 	ViewData["Title"] = "Index";
@@ -8,322 +8,219 @@
 <!-- Product -->
 <div class="bg0 p-b-140">
 	<div class="container">
-		<div class="flex-w flex-sb-m p-b-35">
-			<div class="flex-w flex-l-m filter-tope-group m-tb-10">
-				<button class="stext-106 cl6 hov1 bor3 trans-04 m-r-32 m-tb-5 how-active1" data-filter="*">
-					All Products
-				</button>
-
-				<button class="stext-106 cl6 hov1 bor3 trans-04 m-r-32 m-tb-5" data-filter=".women">
-					Women
-				</button>
-
-				<button class="stext-106 cl6 hov1 bor3 trans-04 m-r-32 m-tb-5" data-filter=".men">
-					Men
-				</button>
-
-				<button class="stext-106 cl6 hov1 bor3 trans-04 m-r-32 m-tb-5" data-filter=".bag">
-					Bag
-				</button>
-
-				<button class="stext-106 cl6 hov1 bor3 trans-04 m-r-32 m-tb-5" data-filter=".shoes">
-					Shoes
-				</button>
-
-				<button class="stext-106 cl6 hov1 bor3 trans-04 m-r-32 m-tb-5" data-filter=".watches">
-					Watches
-				</button>
-			</div>
-
-			<div class="flex-w flex-c-m m-tb-10">
-				<div
-					class="flex-c-m stext-106 cl6 size-104 bor4 pointer hov-btn3 trans-04 m-r-8 m-tb-4 js-show-filter">
-					<i class="icon-filter cl2 m-r-6 fs-15 trans-04 zmdi zmdi-filter-list"></i>
-					<i class="icon-close-filter cl2 m-r-6 fs-15 trans-04 zmdi zmdi-close dis-none"></i>
-					Filter
-				</div>
-
-				<div class="flex-c-m stext-106 cl6 size-105 bor4 pointer hov-btn3 trans-04 m-tb-4 js-show-search">
-					<i class="icon-search cl2 m-r-6 fs-15 trans-04 zmdi zmdi-search"></i>
-					<i class="icon-close-search cl2 m-r-6 fs-15 trans-04 zmdi zmdi-close dis-none"></i>
-					Search
-				</div>
-			</div>
-
-			<!-- Search product -->
-			<div class="dis-none panel-search w-full p-t-10 p-b-15">
-				<div class="bor8 dis-flex p-l-15">
-					<button class="size-113 flex-c-m fs-16 cl2 hov-cl1 trans-04">
-						<i class="zmdi zmdi-search"></i>
-					</button>
-
-					<input class="mtext-107 cl2 size-114 plh2 p-r-15" type="text" name="search-product"
-					       placeholder="Search">
-				</div>
-			</div>
-
-			<!-- Filter -->
-			<div class="dis-none panel-filter w-full p-t-10">
-				<div class="wrap-filter flex-w bg6 w-full p-lr-40 p-t-27 p-lr-15-sm">
-					<div class="filter-col1 p-r-15 p-b-27">
-						<div class="mtext-102 cl2 p-b-15">
-							Sort By
-						</div>
-
-						<ul>
-							<li class="p-b-6">
-								<a href="#" class="filter-link stext-106 trans-04">
-									Default
-								</a>
-							</li>
-
-							<li class="p-b-6">
-								<a href="#" class="filter-link stext-106 trans-04">
-									Popularity
-								</a>
-							</li>
-
-							<li class="p-b-6">
-								<a href="#" class="filter-link stext-106 trans-04">
-									Average rating
-								</a>
-							</li>
-
-							<li class="p-b-6">
-								<a href="#" class="filter-link stext-106 trans-04 filter-link-active">
-									Newness
-								</a>
-							</li>
-
-							<li class="p-b-6">
-								<a href="#" class="filter-link stext-106 trans-04">
-									Price: Low to High
-								</a>
-							</li>
-
-							<li class="p-b-6">
-								<a href="#" class="filter-link stext-106 trans-04">
-									Price: High to Low
-								</a>
-							</li>
-						</ul>
-					</div>
-
-					<div class="filter-col2 p-r-15 p-b-27">
-						<div class="mtext-102 cl2 p-b-15">
-							Price
-						</div>
-
-						<ul>
-							<li class="p-b-6">
-								<a href="#" class="filter-link stext-106 trans-04 filter-link-active">
-									All
-								</a>
-							</li>
-
-							<li class="p-b-6">
-								<a href="#" class="filter-link stext-106 trans-04">
-									$0.00 - $50.00
-								</a>
-							</li>
-
-							<li class="p-b-6">
-								<a href="#" class="filter-link stext-106 trans-04">
-									$50.00 - $100.00
-								</a>
-							</li>
-
-							<li class="p-b-6">
-								<a href="#" class="filter-link stext-106 trans-04">
-									$100.00 - $150.00
-								</a>
-							</li>
-
-							<li class="p-b-6">
-								<a href="#" class="filter-link stext-106 trans-04">
-									$150.00 - $200.00
-								</a>
-							</li>
-
-							<li class="p-b-6">
-								<a href="#" class="filter-link stext-106 trans-04">
-									$200.00+
-								</a>
-							</li>
-						</ul>
-					</div>
-
-					<div class="filter-col3 p-r-15 p-b-27">
-						<div class="mtext-102 cl2 p-b-15">
-							Color
-						</div>
-
-						<ul>
-							<li class="p-b-6">
-									<span class="fs-15 lh-12 m-r-6" style="color: #222;">
-										<i class="zmdi zmdi-circle"></i>
-									</span>
-
-								<a href="#" class="filter-link stext-106 trans-04">
-									Black
-								</a>
-							</li>
-
-							<li class="p-b-6">
-									<span class="fs-15 lh-12 m-r-6" style="color: #4272d7;">
-										<i class="zmdi zmdi-circle"></i>
-									</span>
-
-								<a href="#" class="filter-link stext-106 trans-04 filter-link-active">
-									Blue
-								</a>
-							</li>
-
-							<li class="p-b-6">
-									<span class="fs-15 lh-12 m-r-6" style="color: #b3b3b3;">
-										<i class="zmdi zmdi-circle"></i>
-									</span>
-
-								<a href="#" class="filter-link stext-106 trans-04">
-									Grey
-								</a>
-							</li>
-
-							<li class="p-b-6">
-									<span class="fs-15 lh-12 m-r-6" style="color: #00ad5f;">
-										<i class="zmdi zmdi-circle"></i>
-									</span>
-
-								<a href="#" class="filter-link stext-106 trans-04">
-									Green
-								</a>
-							</li>
-
-							<li class="p-b-6">
-									<span class="fs-15 lh-12 m-r-6" style="color: #fa4251;">
-										<i class="zmdi zmdi-circle"></i>
-									</span>
-
-								<a href="#" class="filter-link stext-106 trans-04">
-									Red
-								</a>
-							</li>
-
-							<li class="p-b-6">
-									<span class="fs-15 lh-12 m-r-6" style="color: #aaa;">
-										<i class="zmdi zmdi-circle-o"></i>
-									</span>
-
-								<a href="#" class="filter-link stext-106 trans-04">
-									White
-								</a>
-							</li>
-						</ul>
-					</div>
-
-					<div class="filter-col4 p-b-27">
-						<div class="mtext-102 cl2 p-b-15">
-							Tags
-						</div>
-
-						<div class="flex-w p-t-4 m-r--5">
-							<a href="#"
-							   class="flex-c-m stext-107 cl6 size-301 bor7 p-lr-15 hov-tag1 trans-04 m-r-5 m-b-5">
-								Fashion
-							</a>
-
-							<a href="#"
-							   class="flex-c-m stext-107 cl6 size-301 bor7 p-lr-15 hov-tag1 trans-04 m-r-5 m-b-5">
-								Lifestyle
-							</a>
-
-							<a href="#"
-							   class="flex-c-m stext-107 cl6 size-301 bor7 p-lr-15 hov-tag1 trans-04 m-r-5 m-b-5">
-								Denim
-							</a>
-
-							<a href="#"
-							   class="flex-c-m stext-107 cl6 size-301 bor7 p-lr-15 hov-tag1 trans-04 m-r-5 m-b-5">
-								Streetstyle
-							</a>
-
-							<a href="#"
-							   class="flex-c-m stext-107 cl6 size-301 bor7 p-lr-15 hov-tag1 trans-04 m-r-5 m-b-5">
-								Crafts
-							</a>
+		<div class="row"> <!-- Đảm bảo đây là div cha của hai cột -->
+			<!-- ===== SIDEBAR COLUMN (Search & Filter) - PHẢI Ở BÊN TRÁI ===== -->
+			<div class="col-lg-3 col-md-4 order-md-1 order-lg-1">
+				<!-- Search product -->
+				<form method="get" asp-controller="Product" asp-action="Index">
+					<div class="panel-search w-full p-t-10 p-b-15">
+						<h4 class="mtext-105 cl2 p-b-10">Tìm kiếm</h4>
+						<div class="bor8 dis-flex p-l-15">
+							<button type="submit" class="size-113 flex-c-m fs-16 cl2 hov-cl1 trans-04">
+								<i class="zmdi zmdi-search"></i>
+							</button>
+							<input class="mtext-107 cl2 size-114 plh2 p-r-15"
+							       type="text"
+							       name="searchTerm"
+							       value="@Model?.SearchTerm"
+							       placeholder="Search" />
 						</div>
 					</div>
-				</div>
-			</div>
-		</div>
+				</form>
 
-		<div class="row isotope-grid">
-			@if (Model != null && Model.Any())
-			{
-				@foreach (var item in Model)
-				{
-					var categoryClassName = "default-product-class";
-					if (item.Category != null && !string.IsNullOrEmpty(item.Category.CategoryName))
-					{
-						categoryClassName = item.Category.CategoryName
-							.ToLower()
-							.Replace(" ", "-")
-							.Replace("&", "and");
-					}
+				<!-- Filter -->
+				<div class="panel-filter w-full p-t-10">
+					<h4 class="mtext-105 cl2 p-b-10 p-t-15">Lọc sản phẩm</h4>
+					<div class="wrap-filter w-full p-lr-15 p-t-27 p-b-17">
 
-					<div class="col-sm-6 col-md-4 col-lg-3 p-b-35 isotope-item @categoryClassName">
-						<!-- Block2 -->
-						<div class="block2">
-							<div class="block2-pic hov-img0">
-								@{
-									var imgUrl = "~/images/placeholder.png"; // Ảnh mặc định
-									if (item.PrimaryImage != null && !string.IsNullOrEmpty(item.PrimaryImage.ImageUrl))
-									{
-										imgUrl = item.PrimaryImage.ImageUrl;
-									}
-								}
-								<img src="@Url.Content(imgUrl)" alt="@item.Name"
-								     style="width: 276px; height: 342px; object-fit: cover;"/> @* Thêm object-fit *@
-
-								@* NÚT QUICK VIEW - QUAN TRỌNG *@
-								<a href="#"
-								   class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04 js-show-modal1"
-								   data-product-id="@item.ProductId"> @* DATA ATTRIBUTE *@
-									Quick View
-								</a>
-							</div>
-
-							<div class="block2-txt flex-w flex-t p-t-14">
-								<div class="block2-txt-child1 flex-col-l ">
-									<a asp-controller="Product" asp-action="Detail" asp-route-id="@item.ProductId"
-									   class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-										@Html.DisplayFor(modelItem => item.Name)
-									</a>
-
-									<span class="stext-105 cl3">
-										@item.Price.ToString("N0") VND @* Định dạng giá *@
-									</span>
+						<!-- Sắp xếp -->
+						<div class="filter-col p-b-15">
+							<div class="filter-title-toggle flex-sb-m p-b-10 pointer">
+								<span class="mtext-102 cl2">Sắp xếp</span>
+								<div>
+									<i class="zmdi zmdi-plus filter-icon filter-icon-plus"></i>
+									<i class="zmdi zmdi-minus filter-icon filter-icon-minus dis-none"></i>
 								</div>
-								@* ... (Nút Wishlist) ... *@
+							</div>
+							<div class="filter-options dis-none p-t-10">
+								<ul>
+									<li class="p-b-6">
+										<a href="@Url.Action("Index", new { categoryId = Model.SelectedCategoryId, sortOption = "" })"
+										   class="filter-link stext-106 trans-04 @(string.IsNullOrWhiteSpace(Model.SortOption) ? "filter-link-active" : "")">
+											Mặc định
+										</a>
+									</li>
+									<li class="p-b-6">
+										<a href="@Url.Action("Index", new { categoryId = Model.SelectedCategoryId, sortOption = "newest" })"
+										   class="filter-link stext-106 trans-04 @(Model.SortOption == "newest" ? "filter-link-active" : "")">
+											Ngày đăng
+										</a>
+									</li>
+									<li class="p-b-6">
+										<a href="@Url.Action("Index", new { categoryId = Model.SelectedCategoryId, sortOption = "price_desc" })"
+										   class="filter-link stext-106 trans-04@(Model.SortOption == "price_desc" ? "filter-link-active" : "")">
+											Giá giảm dần
+										</a>
+									</li>
+									<li class="p-b-6">
+										<a href="@Url.Action("Index", new { categoryId = Model.SelectedCategoryId, sortOption = "price_asc" })"
+										   class="filter-link stext-106 trans-04 @(Model.SortOption == "price_asc" ? "filter-link-active" : "")">
+											Giá tăng dần
+										</a>
+									</li>
+								</ul>
+							</div>
+						</div>
+
+						<!-- Cấp độ -->
+						<div class="filter-col p-b-15">
+							<div class="filter-title-toggle flex-sb-m p-b-10 pointer">
+								<span class="mtext-102 cl2">Cấp độ</span>
+								<div>
+									<i class="zmdi zmdi-plus filter-icon filter-icon-plus"></i>
+									<i class="zmdi zmdi-minus filter-icon filter-icon-minus dis-none"></i>
+								</div>
+							</div>
+							<div class="filter-options dis-none p-t-10">
+								<ul>
+									<li class="p-b-6">
+										<a href="@Url.Action("Index", new { categoryId = Model.SelectedCategoryId, gradeOption = "" })"
+										   class="filter-link stext-106 trans-04 @(string.IsNullOrWhiteSpace(Model.GradeOption) ? "filter-link-active" : "")">
+											Tất cả
+										</a>
+									</li>
+									@if (Model != null && Model.Grades.Any())
+									{
+										@foreach (var item in Model.Grades)
+										{
+											<li class="p-b-6">
+												<a href="@Url.Action("Index", new { categoryId = Model.SelectedCategoryId, gradeOption = @item.GradeName })"
+												   class="filter-link stext-106 trans-04 @(Model.GradeOption == @item.GradeName ? "filter-link-active" : "")">
+													@item.GradeName
+												</a>
+											</li>
+										}
+									}
+								</ul>
+							</div>
+						</div>
+
+						<!-- Thương hiệu -->
+						<div class="filter-col p-b-15">
+							<div class="filter-title-toggle flex-sb-m p-b-10 pointer">
+								<span class="mtext-102 cl2">Thương hiệu</span>
+								<div>
+									<i class="zmdi zmdi-plus filter-icon filter-icon-plus"></i>
+									<i class="zmdi zmdi-minus filter-icon filter-icon-minus dis-none"></i>
+								</div>
+							</div>
+							<div class="filter-options dis-none p-t-10">
+								<ul>
+									<li class="p-b-6">
+										<a href="@Url.Action("Index", new { categoryId = Model.SelectedCategoryId, brandOption = "" })"
+										   class="filter-link stext-106 trans-04 @(string.IsNullOrWhiteSpace(Model.BrandOption) ? "filter-link-active" : "")">
+											Tất cả
+										</a>
+									</li>
+									@if (Model != null && Model.Brands.Any())
+									{
+										@foreach (var item in Model.Brands)
+										{
+											<li class="p-b-6">
+												<a href="@Url.Action("Index", new { categoryId = Model.SelectedCategoryId, brandOption = @item.BrandName })"
+												   class="filter-link stext-106 trans-04 @(Model.BrandOption == @item.BrandName ? "filter-link-active" : "")">
+													@item.BrandName
+												</a>
+											</li>
+										}
+									}
+								</ul>
 							</div>
 						</div>
 					</div>
-				}
-			}
-			else
-			{
-				<p>No products available at the moment.</p>
-			}
+				</div>
+			</div> <!-- End Sidebar Column -->
 
-		</div>
+			<!-- ===== MAIN CONTENT COLUMN (Products & Categories) ===== -->
+			<div class="col-lg-9 col-md-8 order-md-2 order-lg-2">
+				<div class="flex-w flex-l-m filter-tope-group m-tb-10 p-b-20">
+					<a href="@Url.Action("Index", new { categoryId = (int?)null })"
+					   class="stext-106 cl6 hov1 bor3 trans-04 m-r-32 m-tb-5 @(Model.SelectedCategoryId == null ? "how-active1" : "")">
+						TẤT CẢ SẢN PHẨM
+					</a>
+					@if (Model != null && Model.Categories.Any())
+					{
+						@foreach (var item in Model.Categories)
+						{
+							<a href="@Url.Action("Index", new { categoryId = item.CategoryId })"
+							   class="stext-106 cl6 hov1 bor3 trans-04 m-r-32 m-tb-5 @(Model.SelectedCategoryId == item.CategoryId ? "how-active1" : "")">
+								@item.CategoryName.ToUpper()
+							</a>
+						}
+					}
+				</div>
 
-		<!-- Load more -->
-		<div class="flex-c-m flex-w w-full p-t-45">
-			<a href="#" class="flex-c-m stext-101 cl5 size-103 bg2 bor1 hov-btn1 p-lr-15 trans-04">
-				Load More
-			</a>
-		</div>
-	</div>
+				<div class="row isotope-grid">
+					@if (Model != null && Model.Products.Any())
+					{
+						@foreach (var item in Model.Products)
+						{
+							var categoryClassName = "default-product-class";
+							if (item.Category != null && !string.IsNullOrEmpty(item.Category.CategoryName))
+							{
+								categoryClassName = item.Category.CategoryName
+									.ToLower()
+									.Replace(" ", "-")
+									.Replace("&", "and");
+							}
+							<div class="col-sm-6 col-md-6 col-lg-4 p-b-35 isotope-item @categoryClassName">
+								<div class="block2">
+									<div class="block2-pic hov-img0">
+										@{
+											var imgUrl = "~/images/placeholder.png";
+											if (item.PrimaryImage != null && !string.IsNullOrEmpty(item.PrimaryImage.ImageUrl))
+											{
+												imgUrl = item.PrimaryImage.ImageUrl;
+											}
+										}
+										<img src="@Url.Content(imgUrl)" alt="@item.Name"
+										     style="width: 100%; height: 342px; object-fit: cover;" />
+										<a href="#"
+										   class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04 js-show-modal1"
+										   data-product-id="@item.ProductId">
+											Quick View
+										</a>
+									</div>
+									<div class="block2-txt flex-w flex-t p-t-14">
+										<div class="block2-txt-child1 flex-col-l ">
+											<a asp-controller="Product" asp-action="Detail" asp-route-id="@item.ProductId"
+											   class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
+												@Html.DisplayFor(modelItem => item.Name)
+											</a>
+											<span class="stext-105 cl3">
+												@item.Price.ToString("N0") VND
+											</span>
+										</div>
+									</div>
+								</div>
+							</div>
+						}
+					}
+					else
+					{
+						<p>No products available at the moment.</p>
+					}
+				</div>
+
+				<div class="flex-c-m flex-w w-full p-t-45">
+					<a href="#" class="flex-c-m stext-101 cl5 size-103 bg2 bor1 hov-btn1 p-lr-15 trans-04">
+						Load More
+					</a>
+				</div>
+			</div> <!-- End Main Content Column -->
+
+		</div> <!-- End Row -->
+	</div> <!-- End Container -->
 </div>
 
 <!-- Back to top -->
@@ -451,14 +348,46 @@
 	</div>
 </div>
 
+<style>
+	/* Optional: Add some styles to make the sidebar sections distinct */
+	.panel-search, .panel-filter {
+		margin-bottom: 20px; /* Space between search and filter panels */
+	}
+	.panel-filter .wrap-filter > div { /* Target direct children of wrap-filter */
+		width: 100%; /* Make each filter section (Sắp xếp, Cấp độ, etc.) take full width of sidebar */
+	}
+	.panel-search .bor8 .size-113 { /* Nút Tìm kiếm */
+		height: 38px !important; /* Chiều cao mới, ví dụ 38px. Bạn có thể điều chỉnh. */
+		width: 40px !important; /* Giảm chiều rộng một chút nếu cần */
+	}
+	.panel-search .bor8 .size-114 { /* Input Tìm kiếm */
+		height: 38px !important; /* Phải giống chiều cao của nút */
+		line-height: 38px; /* Giúp căn giữa chữ theo chiều dọc trong input */
+		width: calc(100% - 40px); /* Điều chỉnh lại width nếu width của button thay đổi */
+	}
+	/*!* Adjust product image size if needed based on new column structure *!*/
+	/*.isotope-item .block2-pic img {*/
+	/*	!* width: 100%; Ensure it fills its container if it's not already *!*/
+	/*	!* height: auto; Or maintain aspect ratio, or fixed height like 300px *!*/
+	/*}*/
+	.filter-title-toggle {
+		cursor: pointer; /* Biểu thị đây là phần tử có thể click */
+	}
+	.filter-title-toggle .mtext-102 {
+		flex-grow: 1; /* Để tiêu đề chiếm hết không gian còn lại bên trái icon */
+	}
+	.filter-icon {
+		font-size: 16px; /* Kích thước icon */
+		color: #555;    /* Màu icon */
+		margin-left: 8px; /* Khoảng cách giữa tiêu đề và icon */
+		transition: transform 0.3s ease; /* Hiệu ứng xoay (tùy chọn) */
+	}
+</style>
+
+
 @section Scripts {
 	@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
-	@* Các script của template (jquery, bootstrap, slick, select2, ...) nên được load trước script tùy chỉnh của bạn. *@
-	@* File slick-custom.js của template có thể không cần nữa cho modal, hoặc cần được điều chỉnh. *@
-
 	<script>
-		// Đoạn script này nên nằm trong file main.js của template, hoặc bạn có thể đặt ở đây
-		// nếu main.js được load trước.
 		$(document).ready(function () {
 
 			/*==================================================================
@@ -671,5 +600,35 @@
 
 
 		}); // End of $(document).ready
+	</script>
+
+	<script>
+		document.addEventListener('DOMContentLoaded', function () {
+			// JavaScript cho Filter Toggle
+			const filterToggles = document.querySelectorAll('.filter-title-toggle');
+
+			filterToggles.forEach(toggle => {
+				toggle.addEventListener('click', function () {
+					const optionsDiv = this.nextElementSibling; // Div .filter-options
+					const plusIcon = this.querySelector('.filter-icon-plus');
+					const minusIcon = this.querySelector('.filter-icon-minus');
+					const filterCol = this.closest('.filter-col');
+
+					if (optionsDiv) {
+						// Toggle hiển thị của optionsDiv
+						optionsDiv.classList.toggle('dis-none');
+
+						// Toggle hiển thị của icons
+						plusIcon.classList.toggle('dis-none');
+						minusIcon.classList.toggle('dis-none');
+
+						// Thêm/xóa class 'is-open' trên .filter-col để có thể style thêm nếu muốn
+						if (filterCol) {
+							filterCol.classList.toggle('is-open');
+						}
+					}
+				});
+			});
+		});
 	</script>
 }
