@@ -240,7 +240,7 @@
 
         <div class="header-cart-content flex-w js-pscroll">
             <ul class="header-cart-wrapitem w-full">
-                <li class="header-cart-item flex-w flex-t m-b-12">
+                @*<li class="header-cart-item flex-w flex-t m-b-12">
                     <div class="header-cart-item-img">
                         <img src="/images/item-cart-01.jpg" alt="IMG">
                     </div>
@@ -286,7 +286,7 @@
 								1 x $17.00
 							</span>
                     </div>
-                </li>
+                </li>*@
             </ul>
 
             <div class="w-full">
@@ -513,6 +513,252 @@
         $(window).on('resize', function(){
             ps.update();
         })
+    });
+</script>
+<!--Cart===============================================================================================-->
+<script>
+    $(function() {
+        "use strict";
+        $('.js-show-cart').on('click',function(){
+            $('.js-panel-cart').addClass('show-header-cart');
+        });
+
+        $('.js-hide-cart').on('click',function(){
+            $('.js-panel-cart').removeClass('show-header-cart');
+        });
+        
+        const $cartPanel = $('.js-panel-cart'); // Panel chính của giỏ hàng
+        const $cartItemsContainer = $cartPanel.find('.header-cart-wrapitem'); 
+        const $cartTotalElement = $cartPanel.find('.header-cart-total');  
+        const $cartIconNotify = $('.icon-header-noti.js-show-cart');
+        const $showCartButton = $('.js-show-cart');
+        const $hideCartButton = $cartPanel.find('.js-hide-cart, .s-full'); 
+
+        // --- HÀM TIỆN ÍCH ---
+        @*// Hàm tạo URL API động (quan trọng nếu script này nằm trong file .js riêng)
+        // Nếu script nằm trong file .cshtml, bạn có thể dùng @Url.Action trực tiếp.
+        // Cách này cần bạn định nghĩa data-base-url trên một phần tử DOM, ví dụ thẻ body.
+        // Ví dụ: <body data-base-url="@Url.Content("~")">
+        // const baseUrl = $('body').data('base-url') || '';
+        // function getApiUrl(action, controller, params) {
+        //     let url = `${baseUrl}/api/${controller}/${action}`;
+        //     if (params) {
+        //         url += `/${params}`;
+        //     }
+        //     return url;
+        // }*@
+        // HOẶC DÙNG CÁCH ĐƠN GIẢN HƠN LÀ HARDCODE TƯƠNG ĐỐI NẾU KHÔNG CÓ VIRTUAL DIRECTORY
+        function getApiUrl(action, controller, params) {
+            let url = `/api/${controller}/${action}`; // Giả sử API controller là "CartApi"
+            if (params) {
+                url += `/${params}`;
+            }
+            return url;
+        }
+
+        const API_BASE_URL = "/api/CartApi";
+
+
+        // --- HÀM CẬP NHẬT GIAO DIỆN PANEL GIỎ HÀNG ---
+        function updateCartPanelUI(cartViewModel) {
+            $cartItemsContainer.empty(); // Xóa các item cũ
+
+            if (cartViewModel && cartViewModel.items && cartViewModel.items.length > 0) {
+                cartViewModel.items.forEach(function(item) {
+                    // Tạo URL hình ảnh - giả sử API trả về đường dẫn tương đối từ wwwroot
+                    // Nếu API trả về URL đầy đủ thì không cần @Url.Content
+                    let imageUrl = "/images/placeholder.png"; // Default placeholder
+                    if (item.imageUrl) {
+                        // Kiểm tra xem imageUrl đã là đường dẫn tuyệt đối hoặc bắt đầu bằng / chưa
+                        if (item.imageUrl.startsWith("http") || item.imageUrl.startsWith("/")) {
+                            imageUrl = item.imageUrl;
+                        } else {
+                            imageUrl = ($('body').data('base-url') || '') + '/' + item.imageUrl.replace(/^\//, '');
+                        }
+                    }
+
+                    // Tạo link chi tiết sản phẩm - Cần điều chỉnh controller/action cho đúng
+                    let productDetailUrl = ($('body').data('base-url') || '') + `/Products/Detail/${item.productId}`;
+
+
+                    let itemHTML = `
+                    <li class="header-cart-item flex-w flex-t m-b-12" data-product-id="${item.productId}">
+                        <div class="header-cart-item-img" style="width:60px; height: 70px; overflow:hidden;">
+                            <img src="${imageUrl}" alt="${item.productName}" style="width:100%; height:100%; object-fit:cover;">
+                        </div>
+                        <div class="header-cart-item-txt p-t-0" style="width: calc(100% - 85px); padding-left:10px; position:relative;">
+                            <a href="${productDetailUrl}" class="header-cart-item-name m-b-5 hov-cl1 trans-04" title="${item.productName}" style="font-size: 0.9em; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                ${item.productName}
+                            </a>
+                            <span class="header-cart-item-info" style="font-size: 0.85em;">
+                                ${item.quantity} x ${item.price.toLocaleString('vi-VN')} VND
+                            </span>
+                            <button class="btn-remove-from-cart-panel" data-product-id="${item.productId}" title="Remove item" 
+                                    style="position:absolute; top:-2px; right:-5px; background:none; border:none; font-size:1.2em; color:#888; cursor:pointer; padding:0;">
+                                × 
+                            </button>
+                        </div>
+                    </li>`;
+                    $cartItemsContainer.append(itemHTML);
+                });
+                $cartTotalElement.text('Total: ' + cartViewModel.totalPrice.toLocaleString('vi-VN') + ' VND');
+                if (cartViewModel.totalItems > 0) {
+                    $cartIconNotify.attr('data-notify', cartViewModel.totalItems).css('display', 'flex');
+                } else {
+                    $cartIconNotify.attr('data-notify', '0').hide();
+                }
+            } else {
+                $cartItemsContainer.html('<li class="text-center p-all-20 stext-101 cl6">Your cart is currently empty.</li>');
+                $cartTotalElement.text('Total: 0 VND');
+                $cartIconNotify.attr('data-notify', '0').hide();
+            }
+        }
+
+        // --- HÀM TẢI DỮ LIỆU VÀ CẬP NHẬT PANEL GIỎ HÀNG ---
+        function refreshCartPanel() {
+            $.ajax({
+                url: `${API_BASE_URL}`, // Hoặc tên controller API của bạn
+                type: 'GET',
+                beforeSend: function() {
+                    // Có thể thêm hiệu ứng loading cho panel nếu muốn
+                    $cartItemsContainer.html('<li class="text-center p-all-20"><i class="fa fa-spinner fa-spin"></i> Loading...</li>');
+                },
+                success: function(response) {
+                    updateCartPanelUI(response);
+                },
+                error: function(xhr) {
+                    console.error("Error refreshing cart panel:", xhr.responseText);
+                    $cartItemsContainer.html('<li class="text-center p-all-20 text-danger">Could not load cart.</li>');
+                }
+            });
+        }
+
+        // --- HÀM CHỈ CẬP NHẬT SỐ LƯỢNG TRÊN ICON HEADER ---
+        function refreshCartSummaryIcon() {
+            $.ajax({
+                url: `${API_BASE_URL}/summary`,
+                type: 'GET',
+                success: function(response) {
+                    if (response && response.totalItems !== undefined) {
+                        if (response.totalItems > 0) {
+                            $cartIconNotify.attr('data-notify', response.totalItems).css('display', 'flex');
+                        } else {
+                            $cartIconNotify.attr('data-notify', '0').hide();
+                        }
+                    }
+                },
+                error: function(xhr) { console.error("Error refreshing cart summary icon:", xhr.responseText); }
+            });
+        }
+
+        // --- XỬ LÝ NÚT "ADD TO CART" ---
+        // Dùng event delegation cho các nút được thêm động (ví dụ: sản phẩm trong Quick View, sản phẩm liên quan)
+        // Class 'js-addcart-detail' từ template Coza Store
+        // Class 'add-to-cart-btn' là một class bạn có thể thêm vào các nút "Add to Cart" khác
+        $('body').on('click', '.js-addcart-detail, .add-to-cart-btn', function(e) {
+            e.preventDefault();
+            var $button = $(this);
+            var productId = $button.data('product-id');
+            var quantity = 1;
+
+            // Tìm input số lượng gần nhất với nút được click
+            var $quantityInput = $button.closest('.flex-w, .product-detail-cta, .block2-txt-child1').find('.num-product, #detailProductQuantity, #modalProductQuantity');
+            if ($quantityInput.length) {
+                quantity = parseInt($quantityInput.val());
+                if (isNaN(quantity) || quantity < 1) {
+                    quantity = 1;
+                }
+            }
+
+            var productName = "Product"; // Default
+            var $nameElement = $button.closest('.block2-txt, .p-r-50, .product-item').find('.js-name-b2, .js-name-detail, #modalProductName, .product-name-class'); // Thêm .product-name-class nếu cần
+            if ($nameElement.length) productName = $nameElement.first().text().trim();
+
+
+            if (!productId) {
+                console.error("Product ID is missing. Button:", $button[0]);
+                swal("Action Failed", "Could not identify the product.", "error");
+                return;
+            }
+
+            // Thêm hiệu ứng loading (ví dụ)
+            var originalButtonText = $button.html();
+            $button.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Adding...');
+
+            $.ajax({
+                url: `${API_BASE_URL}/add`,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ productId: productId, quantity: quantity }),
+                success: function(response) {
+                    swal(productName, response.message || "has been added to your cart!", "success");
+                    refreshCartPanel(); // Cập nhật lại toàn bộ panel
+                    // Hoặc chỉ cập nhật icon nếu API AddToCart trả về totalItems
+                    // if (response.totalItems !== undefined) {
+                    //    $cartIconNotify.attr('data-notify', response.totalItems).css('display', 'flex');
+                    // }
+                },
+                error: function(jqXHR) {
+                    var errorMsg = "Could not add product to cart. Please try again.";
+                    if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
+                        errorMsg = jqXHR.responseJSON.message;
+                    }
+                    swal("Add to Cart Failed", errorMsg, "error");
+                    console.error("Add to cart error:", jqXHR.responseText);
+                },
+                complete: function() {
+                    $button.prop('disabled', false).html(originalButtonText); // Khôi phục nút
+                }
+            });
+        });
+
+        // --- XỬ LÝ NÚT XÓA ITEM TRONG PANEL CART ---
+        // Sử dụng class 'btn-remove-from-cart-panel' đã thêm vào itemHTML
+        $cartPanel.on('click', '.btn-remove-from-cart-panel', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var productId = $(this).data('product-id');
+
+            if (productId) {
+                // Không cần confirm ở đây nữa nếu muốn xóa ngay
+                // swal({
+                //     title: "Are you sure?",
+                //     text: "Remove this item from your cart?",
+                //     icon: "warning",
+                //     buttons: true,
+                //     dangerMode: true,
+                // }).then((willDelete) => {
+                //    if (willDelete) {
+                $.ajax({
+                    url: `${API_BASE_URL}/remove/${productId}`,
+                    type: 'POST', // Hoặc 'DELETE'
+                    success: function(response) {
+                        updateCartPanelUI(response);
+                        // swal("Removed!", "Item has been removed.", "success");
+                    },
+                    error: function() { swal("Error!", "Could not remove item.", "error"); }
+                });
+                //    }
+                // });
+            }
+        });
+
+        // --- SỰ KIỆN KHI PANEL CART ĐƯỢC HIỂN THỊ (từ template) ---
+        $showCartButton.on('click', function() {
+            refreshCartPanel();
+            // Template (main.js của Coza) sẽ tự mở panel
+        });
+
+        // --- XỬ LÝ CÁC LINK ĐIỀU HƯỚNG TRONG PANEL CART ---
+        // Ví dụ, nút "View Cart" và "Check Out" trong panel
+        // Bạn có thể để chúng là link HTML bình thường, hoặc xử lý bằng JS nếu cần logic phức tạp
+        // $cartPanel.find('a[href="/cart"]').on('click', function(e) { ... });
+        // $cartPanel.find('a[href="/checkout"]').on('click', function(e) { ... });
+
+
+        // --- TẢI THÔNG TIN TÓM TẮT GIỎ HÀNG KHI TRANG LOAD XONG ĐỂ CẬP NHẬT ICON ---
+        refreshCartSummaryIcon();
+
     });
 </script>
 <!--===============================================================================================-->

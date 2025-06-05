@@ -500,7 +500,7 @@
 
 				// 2. API Call
 				// Cập nhật URL này cho đúng API endpoint của bạn
-				var apiUrl = `api/product/${productId}/quickview`;
+				var apiUrl = `api/productapi/${productId}/quickview`;
 
 				$.ajax({
 					url: apiUrl,
@@ -597,7 +597,7 @@
 			});
 
 			// --- Add to Cart from Modal ---
-			$modalAddToCartBtn.on('click', function () {
+			@*$modalAddToCartBtn.on('click', function () {
 				var productId = $(this).data('product-id');
 				var quantity = parseInt($modalProductQuantity.val()) || 1;
 				var productName = $modalProductName.text();
@@ -633,7 +633,7 @@
 				} else {
 					swal("Error", "Product ID is missing. Cannot add to cart.", "error");
 				}
-			});
+			});*@
 
 			// Helper function to populate dropdowns (if needed for size/color)
 			// function populateDropdown($selectElement, items, defaultOptionText) {

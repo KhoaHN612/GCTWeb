@@ -10,7 +10,8 @@ using GCTWeb.Models;
 
 namespace GCTWeb.Controllers
 {
-    [Route("api/product")]
+    /*[Route("api/productapi")]*/
+    [Route("api/[controller]")]
     [ApiController]
     public class ProductAPIController : ControllerBase
     {
@@ -21,14 +22,14 @@ namespace GCTWeb.Controllers
             _context = context;
         }
 
-        // GET: api/product
+        // GET: api/productapi
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
         {
             return await _context.Products.ToListAsync();
         }
 
-        // GET: api/product/5
+        // GET: api/productapi/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Product>> GetProduct(Guid id)
         {
@@ -42,7 +43,7 @@ namespace GCTWeb.Controllers
             return product;
         }
         
-        // GET: api/product/5
+        // GET: api/productapi/5
         [HttpGet("{id}/quickview")]
         public async Task<ActionResult<Product>> GetProductQuickViewDetails(Guid id)
         {
@@ -87,7 +88,7 @@ namespace GCTWeb.Controllers
             return Ok(product);
         }
 
-        // PUT: api/product/5
+        // PUT: api/productapi/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutProduct(Guid id, Product product)
@@ -118,7 +119,7 @@ namespace GCTWeb.Controllers
             return NoContent();
         }
 
-        // POST: api/product
+        // POST: api/productapi
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<Product>> PostProduct(Product product)
@@ -129,7 +130,7 @@ namespace GCTWeb.Controllers
             return CreatedAtAction("GetProduct", new { id = product.ProductId }, product);
         }
 
-        // DELETE: api/product/5
+        // DELETE: api/productapi/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProduct(Guid id)
         {

@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using GCTWeb.Models;
+using GCTWeb.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
@@ -20,13 +21,20 @@ namespace GCTWeb.Areas.Identity.Pages.Account
 {
     public class LoginModel : PageModel
     {
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly ILogger<LoginModel> _logger;
+        private readonly CartService _cartService; 
 
-        public LoginModel(SignInManager<ApplicationUser> signInManager, ILogger<LoginModel> logger)
+        public LoginModel(SignInManager<ApplicationUser> signInManager, 
+            ILogger<LoginModel> logger, 
+            UserManager<ApplicationUser> userManager, 
+            CartService cartService)
         {
             _signInManager = signInManager;
             _logger = logger;
+            _userManager = userManager;
+            _cartService = cartService;
         }
 
         /// <summary>
@@ -116,6 +124,27 @@ namespace GCTWeb.Areas.Identity.Pages.Account
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in.");
+                    
+                    //Merge Cart
+                    var user = await _userManager.FindByEmailAsync(Input.Email);
+                    if (user != null)
+                    {
+                        try
+                        {
+                            await _cartService.MergeSessionCartToUserCartAsync(user.Id);
+                            _logger.LogInformation($"Cart merged for user {user.Email} (ID: {user.Id}).");
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, $"Error merging session cart for user {user.Email}.");
+                            // Không nên chặn việc đăng nhập chỉ vì merge cart lỗi, nhưng cần ghi log.
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogWarning($"Could not find user by email {Input.Email} after successful sign-in to merge cart.");
+                    }
+                    
                     return LocalRedirect(returnUrl);
                 }
                 if (result.RequiresTwoFactor)
