@@ -14,7 +14,7 @@ public class HomeController : Controller
         _logger = logger;
         _context = context;
     }
-
+    
     public async Task<IActionResult> Index()
     {
         var applicationDbContext = _context.Products
