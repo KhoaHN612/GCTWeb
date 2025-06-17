@@ -47,7 +47,7 @@ namespace GCTWeb.Controllers
                 var cartViewModel = await _cartService.GetCartAsync();
                 return Ok(new { 
                     totalItems = cartViewModel.TotalItems, 
-                    totalPriceString = cartViewModel.TotalPrice.ToString("N0") + " VND" // Định dạng tiền tệ
+                    totalPriceString = cartViewModel.TotalPrice.ToString("N0") + " VND"
                 });
             }
             catch (Exception ex)

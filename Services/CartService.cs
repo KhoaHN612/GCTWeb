@@ -17,13 +17,15 @@ public class CartService
 {
     private readonly ApplicationDbContext _context;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ILogger<CartService> _logger; 
     private const string CartItemsSessionKey = "App_SessionCartItems_v2"; // Đổi key nếu cần reset session cũ
     private const string GuestCartIdSessionKey = "App_GuestCartId_v2";
 
-    public CartService(ApplicationDbContext context, IHttpContextAccessor httpContextAccessor)
+    public CartService(ApplicationDbContext context, IHttpContextAccessor httpContextAccessor, ILogger<CartService> logger)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     private ISession Session => _httpContextAccessor.HttpContext?.Session
@@ -154,10 +156,16 @@ public class CartService
         if (quantity == 0) quantity = 1; // Số lượng tối thiểu là 1
 
         var product = await _context.Products
+            .AsNoTracking()
             .Include(p => p.PrimaryImage) // Để lấy ImageUrl cho session cart
             .FirstOrDefaultAsync(p => p.ProductId == productId && p.IsActive);
 
-        if (product == null) throw new InvalidOperationException("Product not found or is not available.");
+        if (product == null) 
+            throw new InvalidOperationException("Product not found or is not available.");
+        if (product.Stock < quantity && quantity > 0)
+        {
+            throw new InvalidOperationException($"Not enough stock for {product.Name}. Available: {product.Stock}, Requested: {quantity}.");
+        }
 
         var userId = GetCurrentUserId();
 
@@ -166,10 +174,13 @@ public class CartService
             var cart = await _context.Carts
                 .Include(c => c.CartItems)
                 .FirstOrDefaultAsync(c => c.UserId == userId);
+            
+            bool isNewCart = false;
             if (cart == null)
             {
-                cart = new Cart { CartId = Guid.NewGuid(), UserId = userId };
+                cart = new Cart { CartId = Guid.NewGuid(), UserId = userId, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
                 _context.Carts.Add(cart);
+                isNewCart = true;
                 // Sẽ SaveChanges sau khi thêm item
             }
 
@@ -180,18 +191,69 @@ public class CartService
                     throw new InvalidOperationException(
                         $"Not enough stock for {product.Name}. Available: {product.Stock}.");
                 cartItem.Quantity += quantity;
+                cartItem.AddedAt = DateTime.UtcNow;
             }
             else
             {
-                if (product.Stock < quantity)
-                    throw new InvalidOperationException(
-                        $"Not enough stock for {product.Name}. Available: {product.Stock}.");
-                cart.CartItems.Add(new CartItem
-                    { CartItemId = Guid.NewGuid(), ProductId = productId, Quantity = quantity, CartId = cart.CartId });
+                var newCartItem = new CartItem
+                {
+                    CartItemId = Guid.NewGuid(),
+                    ProductId = productId,
+                    Quantity = quantity,
+                    CartId = cart.CartId, 
+                };
+                _context.CartItems.Add(newCartItem);
+                cart.CartItems.Add(newCartItem);
             }
 
             cart.UpdatedAt = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
+            
+            /*if (!isNewCart) 
+            {
+                _context.Carts.Update(cart);
+            }*/
+            
+            _logger.LogInformation("--- Before SaveChanges (User Cart) ---");
+            foreach (var entry in _context.ChangeTracker.Entries())
+            {
+                _logger.LogInformation("Entity: {EntityName}, State: {State}, PKs: {PrimaryKeys}",
+                    entry.Entity.GetType().Name,
+                    entry.State,
+                    string.Join(", ", entry.Properties.Where(p => p.Metadata.IsPrimaryKey()).Select(p => $"{p.Metadata.Name}={p.CurrentValue}")));
+
+                if (entry.State == EntityState.Modified)
+                {
+                    foreach (var prop in entry.Properties.Where(p => p.IsModified))
+                    {
+                        _logger.LogInformation("  Modified Property: {PropertyName}, Original: {OriginalValue}, Current: {CurrentValue}",
+                            prop.Metadata.Name, prop.OriginalValue, prop.CurrentValue);
+                    }
+                }
+            }
+            
+            try
+            {
+                await _context.SaveChangesAsync(); 
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                _logger.LogError(ex, "DbUpdateConcurrencyException in AddToCartAsync for user {UserId}. ProductId: {ProductId}", userId, productId);
+                // Kiểm tra xem entity còn tồn tại không
+                var entry = ex.Entries.FirstOrDefault();
+                if (entry != null)
+                {
+                    _logger.LogInformation("Concurrency conflict on entity: {EntityName}", entry.Entity.GetType().Name);
+                    // Có thể tải lại dữ liệu và thử lại, hoặc thông báo lỗi cho người dùng
+                    // var databaseValues = await entry.GetDatabaseValuesAsync();
+                    // if (databaseValues == null) _logger.LogWarning("Entity no longer exists in database.");
+                }
+                throw new InvalidOperationException("Could not update cart due to a data conflict. Please try again.", ex);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Generic Exception in AddToCartAsync for user {UserId}. ProductId: {ProductId}", userId, productId);
+                throw; // Ném lại để CartApiController có thể bắt và trả về lỗi 500
+            }
         }
         else // Khách
         {
