@@ -156,10 +156,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <AdditionalFiles Include="Views\Admin\Brand\Create.cshtml" />
-      <AdditionalFiles Include="Views\Admin\Brand\Delete.cshtml" />
-      <AdditionalFiles Include="Views\Admin\Brand\Details.cshtml" />
-      <AdditionalFiles Include="Views\Admin\Brand\Edit.cshtml" />
       <AdditionalFiles Include="Views\Admin\Brand\Index.cshtml" />
       <AdditionalFiles Include="Views\Admin\Product\Create.cshtml" />
       <AdditionalFiles Include="Views\Admin\Product\Delete.cshtml" />
