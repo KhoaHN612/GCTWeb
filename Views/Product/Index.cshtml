@@ -596,14 +596,14 @@
 			});
 
 			// Handle quantity +/- buttons in modal (template specific)
-			$modalQuickView.find('.btn-num-product-down').on('click', function () {
+			@*$modalQuickView.find('.btn-num-product-down').on('click', function () {
 				var numProduct = Number($(this).next().val());
 				if (numProduct > 1) $(this).next().val(numProduct - 1);
 			});
 			$modalQuickView.find('.btn-num-product-up').on('click', function () {
 				var numProduct = Number($(this).prev().val());
 				$(this).prev().val(numProduct + 1);
-			});
+			});*@
 
 
 		}); // End of $(document).ready

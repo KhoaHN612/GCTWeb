@@ -1,14 +1,20 @@
 using GCTWeb;
 using Microsoft.AspNetCore.Identity;
 using GCTWeb.Data;
+using GCTWeb.Models.Configuration;
 using GCTWeb.Services;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+//Email Settings
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddTransient<IEmailSender, SmtpEmailSender>();
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-builder.Services.AddRazorPages(options => // Hoặc services.Configure<RazorPagesOptions>(options =>
+builder.Services.AddRazorPages(options =>
 {
     // --- ÁNH XẠ LẠI ĐƯỜNG DẪN CHO TRANG IDENTITY ---
 
@@ -44,14 +50,38 @@ builder.Services.AddRazorPages(options => // Hoặc services.Configure<RazorPage
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(option =>
 {
-    option.UseMySql(connectionString, serverVersion: MySqlServerVersion.AutoDetect(connectionString));
+    option.UseMySql(connectionString, serverVersion: MySqlServerVersion.AutoDetect(connectionString))
+        .EnableSensitiveDataLogging() 
+        .EnableDetailedErrors();
 });
 
 /*
 builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true).AddEntityFrameworkStores<ApplicationDbContext>();
 */
 
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+        {
+            options.SignIn.RequireConfirmedAccount = true; 
+            options.SignIn.RequireConfirmedEmail = true;   
+            
+            options.Password.RequireDigit = true;
+            options.Password.RequireLowercase = true;
+            options.Password.RequireUppercase = true;
+            options.Password.RequireNonAlphanumeric = true; 
+            options.Password.RequiredLength = 6;
+            options.Password.RequiredUniqueChars = 1;
+
+            // Lockout settings
+            options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+            options.Lockout.MaxFailedAccessAttempts = 5;
+            options.Lockout.AllowedForNewUsers = true;
+
+            // User settings
+            options.User.AllowedUserNameCharacters =
+                "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
+            options.User.RequireUniqueEmail = true;   
+        }
+    )
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
