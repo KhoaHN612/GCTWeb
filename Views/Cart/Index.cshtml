@@ -1,0 +1,379 @@
+﻿@model GCTWeb.Models.ViewModels.CartViewModel
+
+@{
+	ViewData["Title"] = "Your Shopping Cart";
+	Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@* CSS và Style giữ nguyên *@
+<style>
+	/* ... */
+	.cart-item-row.is-loading {
+		opacity: 0.5;
+		pointer-events: none; 
+	}
+	.input-group-sm .form-control-sm { 
+		padding: .25rem .5rem;
+		font-size: .875rem;
+		width: 50px; 
+	}
+	.input-group-sm .btn { 
+		padding: .25rem .5rem;
+	}
+</style>
+
+<section class="h-custom" style="background-color: #e9ecef;">
+	<div class="container py-5 h-100">
+		<div class="row d-flex justify-content-center align-items-start h-100">
+			<div class="col-12">
+				<div class="card card-registration card-registration-2" style="border-radius: 15px;">
+					<div class="card-body p-0">
+						<div class="row g-0">
+							<div class="col-lg-8">
+								<div class="p-md-5 p-3" id="cartItemsContainer"> @* Thêm ID để dễ target *@
+									<div class="d-flex justify-content-between align-items-center mb-5">
+										<h1 class="fw-bold mb-0">Shopping Cart</h1>
+										<h6 class="mb-0 text-muted"><span id="cartPageItemCount">@Model.TotalItems</span> item@(Model.TotalItems == 1 ? "" : "s")</h6>
+									</div>
+
+									<div id="cartAlerts"></div> @* Nơi hiển thị thông báo động *@
+
+									@if (Model.IsEmpty)
+									{
+										<div class="text-center py-5" id="emptyCartMessage">
+											<i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+											<h4>Your cart is currently empty.</h4>
+											<p class="text-muted">Looks like you haven't added anything yet.</p>
+											<a asp-controller="Products" asp-action="Index" class="btn btn-primary mt-3 btn-lg">
+												<i class="fas fa-shopping-bag me-2"></i>Continue Shopping
+											</a>
+										</div>
+									}
+									else
+									{
+										foreach (var item in Model.Items)
+										{
+											var productDetailUrl = Url.Action("Detail", "Products", new { id = item.ProductId });
+											<div class="cart-item-row row mb-4 d-flex justify-content-between align-items-center" data-product-id="@item.ProductId" data-cartitem-id="@item.CartItemId">
+												<div class="col-md-2 col-lg-2 col-xl-2">
+													<a href="@productDetailUrl">
+														<img src="@Url.Content(item.ImageUrl ?? "~/images/placeholder.png")"
+														     class="img-fluid rounded-3 product-thumbnail-cart" alt="@item.ProductName">
+													</a>
+												</div>
+												<div class="col-md-3 col-lg-3 col-xl-3">
+													<h6 class="mb-1">
+														<a href="@productDetailUrl" class="text-dark text-decoration-none product-name">@item.ProductName</a>
+													</h6>
+												</div>
+												<div class="col-md-3 col-lg-3 col-xl-2 d-flex align-items-center quantity-input-group">
+													<button class="btn btn-link px-2 btn-quantity-change" data-action="decrease">
+														<i class="fas fa-minus"></i>
+													</button>
+													<input min="0" name="quantity" value="@item.Quantity" type="number"
+													       class="form-control form-control-sm item-quantity-input" style="max-width: 60px;" />
+													<button class="btn btn-link px-2 btn-quantity-change" data-action="increase">
+														<i class="fas fa-plus"></i>
+													</button>
+												</div>
+												<div class="col-md-2 col-lg-2 col-xl-2 offset-lg-0 offset-xl-1">
+													<h6 class="mb-0 item-total-price">@item.ItemTotalPrice.ToString("N0") VND</h6>
+												</div>
+												<div class="col-md-1 col-lg-1 col-xl-1 text-end cart-item-actions">
+													<button class="btn btn-link text-danger btn-remove-item" title="Remove item">
+														<i class="fas fa-times"></i>
+													</button>
+												</div>
+											</div>
+											<hr class="my-4 item-divider">
+										}
+									}
+
+									<div class="pt-3 @(Model.IsEmpty ? "d-none" : "")" id="cartPageActionsFooter">
+										<div class="cart-actions-footer">
+											<h6 class="mb-0">
+												<a asp-controller="Products" asp-action="Index" class="text-body">
+													<i class="fas fa-long-arrow-alt-left me-2"></i>Back to shop
+												</a>
+											</h6>
+											<button type="button" class="btn btn-outline-danger" id="clearCartBtn">
+												<i class="fas fa-trash-alt me-1"></i> Clear Cart
+											</button>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="col-lg-4 bg-light">
+								<div class="p-md-5 p-3">
+									<h3 class="fw-bold mb-5 mt-2 pt-1">Summary</h3>
+									<hr class="my-4">
+									<div class="d-flex justify-content-between mb-4">
+										<h5 class="text-uppercase">Items <span id="summaryPageItemCount">@Model.TotalItems</span></h5>
+										<h5 id="summaryPageSubtotal">@Model.TotalPrice.ToString("N0") VND</h5>
+									</div>
+									@* ---------------------------------------------------- *@
+                                    <div id="shippingSection" class="@(true ? "" : "d-none")"> 
+                                        <h5 class="text-uppercase mb-3">Shipping</h5>
+                                        <div class="mb-4 pb-2">
+                                            <select class="form-select" id="shippingOptions"> @* Sử dụng form-select của Bootstrap *@
+                                                <option value="0">Select shipping method...</option>
+                                                @* Các option shipping sẽ được thêm động hoặc từ server sau này *@
+                                                <option value="15000" data-shipping-name="Standard Delivery">Standard-Delivery - 15,000 VND</option>
+                                                <option value="30000" data-shipping-name="Express Delivery">Express Delivery - 30,000 VND</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    @* ---------------------------------------------------- *@
+                                    <div id="giveCodeSection" class="@(true ? "" : "d-none")"> 
+                                        <h5 class="text-uppercase mb-3">Discount Code</h5>
+                                        <div class="mb-3"> @* Giảm margin bottom nếu không có nhiều phần tử sau *@
+                                            <div class="input-group"> @* Dùng input-group cho đẹp *@
+                                                <input type="text" id="discountCodeInput" class="form-control" placeholder="Enter your code" />
+                                                <button class="btn btn-outline-secondary" type="button" id="applyDiscountBtn">Apply</button>
+                                            </div>
+                                            <div id="discountMessage" class="form-text mt-1"></div> @* Để hiển thị thông báo mã giảm giá *@
+                                        </div>
+                                    </div>
+                                    @* ------------------------------------------------- *@
+									<hr class="my-4">
+									<div class="d-flex justify-content-between mb-5">
+										<h5 class="text-uppercase">Total price</h5>
+										<h5 id="summaryPageTotalPrice">@Model.TotalPrice.ToString("N0") VND</h5>
+									</div>
+									<a asp-controller="Cart" asp-action="Checkout" class="btn btn-dark btn-block btn-lg w-100 @(Model.IsEmpty ? "disabled" : "")" id="proceedToCheckoutBtn">
+										Proceed to Checkout
+									</a>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+@section Scripts {
+	<script>
+		$(document).ready(function() {
+			const API_CART_CONTROLLER_NAME = "CartApi"; // Tên API Controller của bạn
+			const $cartItemsContainer = $('#cartItemsContainer'); // Container chính cho các item và hr
+			const $emptyCartMessageDiv = $('#emptyCartMessage');
+			const $cartPageActionsFooter = $('#cartPageActionsFooter');
+			const $proceedToCheckoutBtn = $('#proceedToCheckoutBtn');
+
+			function getApiUrl(action, controller, params) {
+				let baseUrl = "@Url.Content("~")".replace(/\/$/, '');
+				let url = `${baseUrl}/api/${controller}/${action}`;
+				if (params) {
+					url += `/${params}`;
+				}
+				return url;
+			}
+
+			function showAlert(type, message) {
+				$('#cartAlerts').html(`<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                                        ${message}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                     </div>`);
+				// Tự động ẩn sau vài giây (tùy chọn)
+				setTimeout(() => { $('#cartAlerts .alert').alert('close'); }, 5000);
+			}
+
+			function updateCartPageSummary(totalItems, totalPriceString) {
+				$('#cartPageItemCount').text(totalItems);
+				$('#summaryPageItemCount').text(totalItems);
+				$('#summaryPageSubtotal').text(totalPriceString);
+				$('#summaryPageTotalPrice').text(totalPriceString);
+
+				if (totalItems === 0) {
+					if ($emptyCartMessageDiv.length === 0) { // Chỉ thêm nếu chưa có
+						$('#cartItemsContainer hr.my-4:first-of-type').before(
+							'<div class="text-center py-5" id="emptyCartMessage">' +
+							'<i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>' +
+							'<h4>Your cart is currently empty.</h4>' +
+							'<p class="text-muted">Looks like you haven\'t added anything yet.</p>' +
+							'<a href="@Url.Action("Index", "Products")" class="btn btn-primary mt-3 btn-lg"><i class="fas fa-shopping-bag me-2"></i>Continue Shopping</a>' +
+							'</div>'
+						);
+					}
+					$emptyCartMessageDiv.removeClass('d-none');
+					$('.cart-item-row, .item-divider').remove(); // Xóa hết item và đường kẻ
+					$cartPageActionsFooter.addClass('d-none');
+					$proceedToCheckoutBtn.addClass('disabled');
+
+				} else {
+					$emptyCartMessageDiv.addClass('d-none');
+					$cartPageActionsFooter.removeClass('d-none');
+					$proceedToCheckoutBtn.removeClass('disabled');
+				}
+
+				// Cập nhật icon giỏ hàng trên header (nếu có hàm global)
+				if (typeof window.refreshCartSummaryIconGlobal === 'function') {
+					window.refreshCartSummaryIconGlobal();
+				} else if (typeof refreshCartSummaryIcon === 'function') { // Nếu hàm nằm trong cùng file
+					refreshCartSummaryIcon();
+				}
+			}
+
+			function handleCartUpdate(response, successMessage) {
+				if (response && response.items !== undefined) { // Giả sử API luôn trả về CartViewModel
+					// Cập nhật cụ thể item nếu là update quantity thành công
+					if (successMessage.includes("updated") && response.items.length > 0) {
+						response.items.forEach(item => {
+							var $itemRow = $(`.cart-item-row[data-product-id="${item.productId}"]`);
+							if ($itemRow.length) {
+								$itemRow.find('.item-quantity-input').val(item.quantity);
+								$itemRow.find('.item-total-price').text(item.itemTotalPrice.toLocaleString('vi-VN') + ' VND');
+							}
+						});
+					} else if (successMessage.includes("removed")) {
+						// Item đã bị xóa khỏi DOM bởi ajaxRemoveItem
+					} else if (successMessage.includes("cleared")) {
+						$('.cart-item-row, .item-divider').remove();
+					}
+					// Cập nhật tổng quan
+					updateCartPageSummary(response.totalItems, response.totalPrice.toLocaleString('vi-VN') + ' VND');
+					if (successMessage) showAlert('success', successMessage);
+
+				} else if (response && response.message) { // Trường hợp API chỉ trả về message (ví dụ clear)
+					updateCartPageSummary(0, "0 VND"); // Giả sử clear cart thành công
+					if (successMessage) showAlert('success', successMessage);
+				}
+				// Cập nhật panel giỏ hàng (nếu có hàm global)
+				if (typeof window.refreshCartPanelData === 'function') {
+					window.refreshCartPanelData();
+				}
+			}
+
+			function handleCartError(jqXHR, defaultMessage) {
+				let errorMsg = defaultMessage;
+				if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
+					errorMsg = jqXHR.responseJSON.message;
+				} else if (jqXHR.responseText) {
+					try {
+						const err = JSON.parse(jqXHR.responseText);
+						if(err.errors) errorMsg = Object.values(err.errors).flat().join(' ');
+					} catch (e) { /* Bỏ qua nếu không parse được JSON */ }
+				}
+				showAlert('danger', errorMsg);
+				console.error("Cart Action Error:", jqXHR.responseText);
+			}
+
+			// --- AJAX UPDATE QUANTITY ---
+			function ajaxUpdateQuantity(productId, newQuantity) {
+				var $itemRow = $(`.cart-item-row[data-product-id="${productId}"]`);
+				$itemRow.addClass('is-loading');
+
+				$.ajax({
+					url: getApiUrl('UpdateQuantity', API_CART_CONTROLLER_NAME),
+					type: 'POST',
+					contentType: 'application/json',
+					data: JSON.stringify({ productId: productId, quantity: newQuantity }),
+					success: function(response) {
+						handleCartUpdate(response, newQuantity === 0 ? "Item removed from cart." : "Cart quantity updated.");
+					},
+					error: function(jqXHR) {
+						handleCartError(jqXHR, "Could not update quantity.");
+						// Khôi phục giá trị input cũ nếu lỗi
+						var originalQuantity = $itemRow.find('.item-quantity-input').data('original-quantity') || 1;
+						$itemRow.find('.item-quantity-input').val(originalQuantity);
+					},
+					complete: function() { $itemRow.removeClass('is-loading'); }
+				});
+			}
+
+			// --- AJAX REMOVE ITEM ---
+			function ajaxRemoveItem(productId) {
+				var $itemRow = $(`.cart-item-row[data-product-id="${productId}"]`);
+				$itemRow.addClass('is-loading');
+				$.ajax({
+					url: getApiUrl('RemoveItem', API_CART_CONTROLLER_NAME, productId),
+					type: 'POST',
+					success: function(response) {
+						$itemRow.next('hr.item-divider').remove(); // Xóa cả đường kẻ
+						$itemRow.remove();
+						handleCartUpdate(response, "Item removed from cart.");
+					},
+					error: function(jqXHR) {
+						handleCartError(jqXHR, "Could not remove item.");
+						$itemRow.removeClass('is-loading');
+					}
+					// complete không cần remove is-loading vì item đã bị xóa
+				});
+			}
+
+			// Event listener cho nút +/- số lượng
+			$cartItemsContainer.on('click', '.btn-quantity-change', function() {
+				var $button = $(this);
+				var $input = $button.closest('.quantity-input-group').find('.item-quantity-input');
+				var productId = $input.closest('.cart-item-row').data('product-id');
+				var oldValue = parseInt($input.val());
+				var newValue = oldValue;
+
+				if ($button.data('action') === 'increase') {
+					newValue = oldValue + 1;
+				} else if ($button.data('action') === 'decrease') {
+					newValue = oldValue - 1;
+				}
+
+				if (newValue >= 0) { // Cho phép giảm xuống 0 để kích hoạt xóa
+					$input.data('original-quantity', oldValue); // Lưu giá trị cũ để khôi phục nếu lỗi
+					ajaxUpdateQuantity(productId, newValue);
+				}
+			});
+
+			// Event listener cho input số lượng (sau khi ngừng gõ)
+			var debounceTimerQty;
+			$cartItemsContainer.on('input', '.item-quantity-input', function() {
+				clearTimeout(debounceTimerQty);
+				var $input = $(this);
+				var productId = $input.closest('.cart-item-row').data('product-id');
+				var newQuantity = parseInt($input.val());
+				$input.data('original-quantity', $input.val()); // Lưu giá trị hiện tại trước khi debounce
+
+				debounceTimerQty = setTimeout(function() {
+					if (!isNaN(newQuantity) && newQuantity >= 0) {
+						ajaxUpdateQuantity(productId, newQuantity);
+					} else if (!isNaN(newQuantity) && newQuantity < 0) {
+						$input.val(1);
+						ajaxUpdateQuantity(productId, 1);
+					}
+				}, 800);
+			});
+
+			// Event listener cho nút xóa item
+			$cartItemsContainer.on('click', '.btn-remove-item', function() {
+				var productId = $(this).closest('.cart-item-row').data('product-id');
+				if (confirm("Are you sure you want to remove this item?")) {
+					ajaxRemoveItem(productId);
+				}
+			});
+
+			// Event listener cho nút Clear Cart
+			$('#clearCartBtn').on('click', function() {
+				if (confirm("Are you sure you want to clear your entire cart?")) {
+					$(this).prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Clearing...');
+					$.ajax({
+						url: getApiUrl('ClearCart', API_CART_CONTROLLER_NAME),
+						type: 'POST',
+						success: function(response) {
+							handleCartUpdate(response.cart, response.message || "Cart cleared successfully.");
+						},
+						error: function(jqXHR) {
+							handleCartError(jqXHR, "Could not clear cart.");
+						},
+						complete: function() {
+							$('#clearCartBtn').prop('disabled', false).html('<i class="fas fa-trash-alt me-1"></i> Clear Cart');
+						}
+					});
+				}
+			});
+
+			// Khởi tạo PerfectScrollbar cho panel cart (nếu bạn dùng script này cho cả panel)
+			// (Logic này đã có trong _Layout.cshtml rồi, nên không cần ở đây nữa nếu script này chỉ cho trang /Cart/Index)
+			// if ($('.js-pscroll').length) { ... }
+
+		});
+	</script>
+}
