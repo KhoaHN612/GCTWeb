@@ -10,11 +10,11 @@
 	<div class="container">
 		<div class="row"> <!-- Đảm bảo đây là div cha của hai cột -->
 			<!-- ===== SIDEBAR COLUMN (Search & Filter) - PHẢI Ở BÊN TRÁI ===== -->
-			<div class="col-lg-3 col-md-4 order-md-1 order-lg-1">
+			<div class="col-lg-2 col-md-4 order-md-1 order-lg-1">
 				<!-- Search product -->
 				<form method="get" asp-controller="Product" asp-action="Index">
 					<div class="panel-search w-full p-t-10 p-b-15">
-						<h4 class="mtext-105 cl2 p-b-10">Tìm kiếm</h4>
+						@* <h4 class="mtext-105 cl2 p-b-10">Tìm kiếm</h4> *@
 						<div class="bor8 dis-flex p-l-15">
 							<button type="submit" class="size-113 flex-c-m fs-16 cl2 hov-cl1 trans-04">
 								<i class="zmdi zmdi-search"></i>
@@ -142,8 +142,8 @@
 			</div> <!-- End Sidebar Column -->
 
 			<!-- ===== MAIN CONTENT COLUMN (Products & Categories) ===== -->
-			<div class="col-lg-9 col-md-8 order-md-2 order-lg-2">
-				<div class="flex-w flex-l-m filter-tope-group m-tb-10 p-b-20">
+			<div class="col-lg-10 col-md-8 order-md-2 order-lg-2">
+				<div class="flex-w flex-l-m filter-tope-group m-tb-10">
 					<a href="@Url.Action("Index", new { categoryId = (int?)null })"
 					   class="stext-106 cl6 hov1 bor3 trans-04 m-r-32 m-tb-5 @(Model.SelectedCategoryId == null ? "how-active1" : "")">
 						TẤT CẢ SẢN PHẨM
@@ -173,7 +173,7 @@
 									.Replace(" ", "-")
 									.Replace("&", "and");
 							}
-							<div class="col-sm-6 col-md-6 col-lg-4 p-b-35 isotope-item @categoryClassName">
+							<div class="col-sm-6 col-md-6 col-lg-3 p-b-35 isotope-item @categoryClassName">
 								<div class="block2">
 									<div class="block2-pic hov-img0">
 										@{
@@ -194,7 +194,7 @@
 									<div class="block2-txt flex-w flex-t p-t-14">
 										<div class="block2-txt-child1 flex-col-l ">
 											<a asp-controller="Product" asp-action="Detail" asp-route-id="@item.ProductId"
-											   class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
+											   class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6 truncate-name">
 												@Html.DisplayFor(modelItem => item.Name)
 											</a>
 											<span class="stext-105 cl3">
@@ -381,6 +381,13 @@
 		color: #555;    /* Màu icon */
 		margin-left: 8px; /* Khoảng cách giữa tiêu đề và icon */
 		transition: transform 0.3s ease; /* Hiệu ứng xoay (tùy chọn) */
+	}
+	.truncate-name {
+		display: block;
+		max-width: 100%;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 </style>
 
