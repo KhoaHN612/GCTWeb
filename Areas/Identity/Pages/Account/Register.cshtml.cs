@@ -77,6 +77,7 @@ namespace GCTWeb.Areas.Identity.Pages.Account
             /// </summary>
             [Required]
             [Display(Name = "Full Name")] 
+            [StringLength(50, ErrorMessage = "The {0} cannot empty.", MinimumLength = 1)]
             public string Name { get; set; }
             
             [Required]
@@ -84,6 +85,12 @@ namespace GCTWeb.Areas.Identity.Pages.Account
             [Display(Name = "Email")]
             public string Email { get; set; }
 
+            [Required]
+            [DataType(DataType.PhoneNumber)] 
+            [Phone(ErrorMessage = "Invalid Phone Number format.")]
+            [Display(Name = "Phone number")]
+            public string PhoneNumber { get; set; }
+            
             /// <summary>
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
             ///     directly from your code. This API may change or be removed in future releases.
@@ -119,6 +126,11 @@ namespace GCTWeb.Areas.Identity.Pages.Account
             {
                 var user = CreateUser();
                 user.Name = Input.Name;
+                
+                if (!string.IsNullOrWhiteSpace(Input.PhoneNumber))
+                {
+                    user.PhoneNumber = Input.PhoneNumber;
+                }
 
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);

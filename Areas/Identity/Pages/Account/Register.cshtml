@@ -4,38 +4,38 @@
     ViewData["Title"] = "Register";
 }
 
-<h1>@ViewData["Title"]</h1>
+@*<div class="text-center"><h1>@ViewData["Title"]</h1></div>*@
 
-<div class="row">
-    <div class="col-md-4">
+@*<div class="row">
+    <div class="card rounded shadow col-md-4 mx-auto pt-3 pb-3 mt-2 mb-2">
         <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
             <h2>Create a new account.</h2>
             <hr />
             <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
             <div class="form-floating mb-3">
-                <input asp-for="Input.Name" class="form-control" autocomplete="name" aria-required="true" placeholder="Your Name" />
                 <label asp-for="Input.Name">Full Name</label>
+                <input asp-for="Input.Name" class="form-control" autocomplete="name" aria-required="true" placeholder="Your Name"/>
                 <span asp-validation-for="Input.Name" class="text-danger"></span>
             </div>
             <div class="form-floating mb-3">
-                <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
                 <label asp-for="Input.Email">Email</label>
+                <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com"/>
                 <span asp-validation-for="Input.Email" class="text-danger"></span>
             </div>
             <div class="form-floating mb-3">
-                <input asp-for="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
                 <label asp-for="Input.Password">Password</label>
+                <input asp-for="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password"/>
                 <span asp-validation-for="Input.Password" class="text-danger"></span>
             </div>
             <div class="form-floating mb-3">
-                <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
                 <label asp-for="Input.ConfirmPassword">Confirm Password</label>
+                <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password"/>
                 <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
             </div>
             <button id="registerSubmit" type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
         </form>
     </div>
-    <div class="col-md-6 col-md-offset-2">
+    $1$<div class="col-md-6 col-md-offset-2">
         <section>
             <h3>Use another service to register.</h3>
             <hr />
@@ -64,9 +64,83 @@
                 }
             }
         </section>
+    </div>#1#
+</div>*@
+<section class="vh-80" style="background-color: #508bfc;">
+    <div class="container py-5 h-100">
+        <div class="row d-flex justify-content-center align-items-center h-80">
+            <div class="col-12 col-md-8 col-lg-6 col-xl-5">
+                <div class="card shadow-2-strong" style="border-radius: 1rem;">
+                    <div class="card-body p-5 text-center">
+                        <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+
+                            <h3 class="mb-5">Create a new account.</h3>
+
+                            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+
+                            <div data-mdb-input-init class="form-outline">
+                                <input asp-for="Input.Name" class="form-control form-control-lg" autocomplete="name"
+                                       aria-required="true" placeholder="Your Name"/>
+                                <label class="form-label" asp-for="Input.Name">Full Name</label>
+                                
+                            </div>
+                            <span asp-validation-for="Input.Name" class="text-danger"></span>
+                            <div class="mb-4"></div>
+
+                            <div data-mdb-input-init class="form-outline">
+                                <input asp-for="Input.Email" class="form-control form-control-lg"
+                                       autocomplete="username" aria-required="true" placeholder="name@example.com"/>
+                                <label class="form-label" asp-for="Input.Email">Email</label>
+                                
+                            </div>
+                            <span asp-validation-for="Input.Email" class="text-danger"></span>
+                            <div class="mb-4"></div>
+
+                            <div data-mdb-input-init class="form-outline">
+                                <input asp-for="Input.PhoneNumber" class="form-control form-control-lg"
+                                       autocomplete="tel" aria-required="true" placeholder=" "/>
+                                <label class="form-label" asp-for="Input.PhoneNumber">Phone Number</label>
+                                
+                            </div>
+                            <span asp-validation-for="Input.PhoneNumber" class="text-danger"></span>
+                            <div class="mb-4"></div>
+
+                            <div data-mdb-input-init class="form-outline">
+                                <input asp-for="Input.Password" class="form-control form-control-lg"
+                                       autocomplete="current-password" aria-required="true" placeholder="password"/>
+                                <label class="form-label" asp-for="Input.Password">Password</label>
+                                
+                            </div>
+                            <span asp-validation-for="Input.Password" class="text-danger"></span>
+                            <div class="mb-4"></div>
+
+                            <div data-mdb-input-init class="form-outline">
+                                <input asp-for="Input.ConfirmPassword" class="form-control form-control-lg"
+                                       autocomplete="current-password" aria-required="true" placeholder="password"/>
+                                <label class="form-label" asp-for="Input.ConfirmPassword">Confirm Password</label>
+                                
+                            </div>
+                            <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+                            <div class="mb-4"></div>
+
+                            <button data-mdb-ripple-init class="btn btn-primary btn-lg btn-block"
+                                    id="registerSubmit" type="submit">Register
+                            </button>
+
+                            <hr class="my-4">
+
+                            <p>
+                                <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl">Back to Login Page</a>
+                            </p>
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
+</section>
 
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+    <partial name="_ValidationScriptsPartial"/>
 }
