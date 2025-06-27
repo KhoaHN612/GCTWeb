@@ -5,7 +5,7 @@ namespace GCTWeb.Controllers;
 public class OrderController : Controller
 {
     // GET
-    public IActionResult Index()
+    public IActionResult Detail()
     {
         return View();
     }

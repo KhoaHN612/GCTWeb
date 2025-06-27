@@ -1,4 +1,6 @@
-﻿namespace GCTWeb.Models;
+﻿using GCTWeb.Models.Enums;
+
+namespace GCTWeb.Models;
 
 [Table("vouchers")]
 [Index(nameof(Code), IsUnique = true)]

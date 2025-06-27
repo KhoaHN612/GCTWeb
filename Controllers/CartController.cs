@@ -32,7 +32,7 @@ public class CartController : Controller
         }
     }
 
-    // GET: /Cart/Checkout
+    // GET: Cart/Checkout'
     public async Task<IActionResult> Checkout()
     {
         var cart = await _cartService.GetCartAsync();
@@ -41,6 +41,7 @@ public class CartController : Controller
             TempData["CartErrorMessage"] = "Your cart is empty. Please add items before proceeding to checkout.";
             return RedirectToAction(nameof(Index));
         }
-        return RedirectToAction("Index", "Checkout"); // Giả sử có CheckoutController
+
+        return RedirectToAction(nameof(Index), "Checkout");
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace GCTWeb.Models;
+﻿using GCTWeb.Models.Enums;
+
+namespace GCTWeb.Models;
 
 [Table("voucher_applicability")]
 [Index(nameof(VoucherId), nameof(EntityType), nameof(EntityId), IsUnique = true, Name = "IX_voucher_applicability_unique")]

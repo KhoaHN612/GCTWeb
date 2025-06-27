@@ -6,8 +6,6 @@ public class Address
 {
     public Address()
     {
-        OrdersShippedTo = new HashSet<Order>();
-        OrdersBilledTo = new HashSet<Order>();
         CreatedAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
         IsDefaultShipping = false;
@@ -73,10 +71,5 @@ public class Address
 
     [ForeignKey(nameof(UserId))]
     public virtual ApplicationUser User { get; set; } = null!; // Đổi ApplicationUser nếu tên khác
-
-    [InverseProperty(nameof(Order.ShippingAddress))]
-    public virtual ICollection<Order> OrdersShippedTo { get; set; }
-
-    [InverseProperty(nameof(Order.BillingAddress))]
-    public virtual ICollection<Order> OrdersBilledTo { get; set; }
+    
 }

@@ -1,4 +1,6 @@
-﻿namespace GCTWeb.Models;
+﻿using GCTWeb.Models.Enums;
+
+namespace GCTWeb.Models;
 
 [Table("orders")]
 [Index(nameof(OrderNumber), IsUnique = true)]
@@ -11,6 +13,7 @@ public class Order
     {
         OrderDetails = new HashSet<OrderDetail>();
         OrderVoucherUsages = new HashSet<OrderVoucherUsage>();
+        OrderId = Guid.NewGuid();
         CreatedAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
         Status = OrderStatus.Pending;
@@ -31,12 +34,17 @@ public class Order
     [Column("user_id")]
     public string? UserId { get; set; }
 
-    [Required]
-    [Column("shipping_address_id")]
-    public Guid ShippingAddressId { get; set; }
+    [Required(ErrorMessage = "Recipient name is required.")]
+    [StringLength(100)]
+    public string ShippingRecipientName { get; set; } = string.Empty;
 
-    [Column("billing_address_id")]
-    public Guid? BillingAddressId { get; set; }
+    [Required(ErrorMessage = "Phone number is required.")]
+    [StringLength(20)]
+    public string ShippingPhone { get; set; } = string.Empty;
+    
+    [Required(ErrorMessage = "Address is required.")]
+    [StringLength(500)] // Tăng độ dài để chứa toàn bộ địa chỉ
+    public string ShippingAddress { get; set; } = string.Empty;
 
     [Required]
     [Column("status")]
@@ -93,12 +101,6 @@ public class Order
     // Navigation properties
     [ForeignKey(nameof(UserId))]
     public virtual ApplicationUser User { get; set; } = null!; 
-
-    [ForeignKey(nameof(ShippingAddressId))]
-    public virtual Address ShippingAddress { get; set; } = null!;
-
-    [ForeignKey(nameof(BillingAddressId))]
-    public virtual Address? BillingAddress { get; set; }
 
     [ForeignKey(nameof(AppliedVoucherId))]
     public virtual Voucher? AppliedVoucher { get; set; }

@@ -60,19 +60,6 @@ public class ApplicationDbContext: IdentityDbContext<ApplicationUser>
            .HasForeignKey(od => od.ProductId)
            .OnDelete(DeleteBehavior.Restrict); // Khớp với SQL
 
-         builder.Entity<Order>()
-            .HasOne(o => o.ShippingAddress)
-            .WithMany(a => a.OrdersShippedTo)
-            .HasForeignKey(o => o.ShippingAddressId)
-            .OnDelete(DeleteBehavior.Restrict); // VD: Không cho xóa địa chỉ đang được dùng để ship
-
-         builder.Entity<Order>()
-            .HasOne(o => o.BillingAddress)
-            .WithMany(a => a.OrdersBilledTo)
-            .HasForeignKey(o => o.BillingAddressId)
-            .IsRequired(false)
-            .OnDelete(DeleteBehavior.Restrict); // VD: Không cho xóa địa chỉ đang được dùng để bill
-
          // Foreign key từ Address đến User (Identity)
          builder.Entity<Address>()
             .HasOne(a => a.User)
