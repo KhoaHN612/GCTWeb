@@ -1,4 +1,5 @@
-﻿using GCTWeb.Models.Enums;
+﻿using System.Security.Claims;
+using GCTWeb.Models.Enums;
 using GCTWeb.Models.ViewModels;
 using GCTWeb.Services;
 using Microsoft.AspNetCore.Identity;
@@ -12,17 +13,20 @@ public class CheckoutController : Controller
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ApplicationDbContext _context;
     private readonly ILogger<CheckoutController> _logger;
+    private readonly SignInManager<ApplicationUser> _signInManager;
 
     public CheckoutController(
         CartService cartService,
         UserManager<ApplicationUser> userManager,
         ApplicationDbContext context,
-        ILogger<CheckoutController> logger)
+        ILogger<CheckoutController> logger,
+        SignInManager<ApplicationUser> signInManager)
     {
         _cartService = cartService;
         _userManager = userManager;
         _context = context;
         _logger = logger;
+        _signInManager = signInManager;
     }
 
     // GET: /Checkout
@@ -36,16 +40,22 @@ public class CheckoutController : Controller
             return RedirectToAction("Index", "Cart");
         }
 
-        var currentUser = await _userManager.GetUserAsync(User);
-        if (currentUser == null) return Challenge();
-
         var viewModel = new CheckoutViewModel
         {
-            Cart = cart,
-            BillingFullName = currentUser.Name,
-            BillingEmail = currentUser.Email,
-            BillingPhoneNumber = currentUser.PhoneNumber
+            Cart = cart
         };
+        
+        if (_signInManager.IsSignedIn(User))
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser != null)
+            {
+                viewModel.BillingFullName = currentUser.Name;
+                viewModel.BillingEmail = currentUser.Email;
+                viewModel.BillingPhoneNumber = currentUser.PhoneNumber;
+                // TODO: Tải địa chỉ mặc định của user từ DB (nếu có) và điền vào các trường địa chỉ
+            }
+        }
 
         return View(viewModel);
     }
@@ -60,14 +70,26 @@ public class CheckoutController : Controller
 
         if (cart.IsEmpty) ModelState.AddModelError("", "Your cart is empty and cannot be processed.");
 
+        if (!_signInManager.IsSignedIn(User) && string.IsNullOrWhiteSpace(model.BillingEmail))
+        {
+            ModelState.AddModelError("BillingEmail", "Email address is required to receive order confirmation.");
+        }
+        
         if (!ModelState.IsValid)
         {
-            _logger.LogWarning("Checkout ModelState is invalid for user.");
+            _logger.LogWarning("Checkout ModelState is invalid.");
             return View(model);
         }
 
-        var currentUser = await _userManager.GetUserAsync(User);
-        if (currentUser == null) return Challenge();
+        string? currentUserId = null; 
+        if (_signInManager.IsSignedIn(User))
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser != null)
+            {
+                currentUserId = currentUser.Id;
+            }
+        }
 
         await using var transaction = await _context.Database.BeginTransactionAsync();
         try
@@ -75,12 +97,14 @@ public class CheckoutController : Controller
             // Tổ hợp địa chỉ thành một chuỗi duy nhất
             var fullShippingAddress =
                 $"{model.BillingAddress1}, {model.BillingWard}, {model.BillingCity}, {model.BillingState}";
+            
+            var newOrderNumber = await GenerateOrderNumberAsync();
 
             var order = new Order
             {
                 OrderId = Guid.NewGuid(),
-                UserId = currentUser.Id,
-                OrderNumber = GenerateOrderNumber(),
+                UserId = currentUserId,
+                OrderNumber = newOrderNumber,
 
                 ShippingRecipientName = model.BillingFullName,
                 ShippingPhone = model.BillingPhoneNumber,
@@ -102,7 +126,7 @@ public class CheckoutController : Controller
                 if (productInDb == null || productInDb.Stock < item.Quantity)
                     throw new InvalidOperationException(
                         $"Product '{item.ProductName}' is no longer available or out of stock.");
-                productInDb.Stock -= item.Quantity; // Giảm tồn kho
+                productInDb.Stock -= item.Quantity; 
 
                 var orderDetail = new OrderDetail
                 {
@@ -123,32 +147,38 @@ public class CheckoutController : Controller
 
             await _cartService.ClearCartAsync();
 
-            return RedirectToAction("OrderConfirmation", new { id = order.OrderId });
+            return RedirectToAction("OrderConfirmation", new { orderNumber = order.OrderNumber });
         }
         catch (Exception ex)
         {
             await transaction.RollbackAsync();
-            _logger.LogError(ex, "Error during checkout process for user {UserId}", currentUser.Id);
+            _logger.LogError(ex, "Error during checkout process for user/guest. UserId: {UserId}", currentUserId ?? "Guest");
             ModelState.AddModelError("", "An error occurred while placing your order. Please try again.");
             return View(model);
         }
     }
-
-    [HttpGet]
-    public async Task<IActionResult> OrderConfirmation(Guid id)
+    
+    private async Task<string> GenerateOrderNumberAsync()
     {
-        if (id == Guid.Empty) return BadRequest();
-        // Tải đơn hàng để hiển thị xác nhận
-        var order = await _context.Orders.Include(o => o.OrderDetails).ThenInclude(od => od.Product)
-            .FirstOrDefaultAsync(o => o.OrderId == id);
-        if (order == null) return NotFound();
+        string orderNumber;
+        var random = new Random();
+        do
+        {
+            // Lấy ngày hiện tại theo giờ Việt Nam
+            var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            var today = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo);
 
-        return View("OrderConfirmation", order);
-    }
+            // Phần ngày tháng: GCT-YYMMDD-
+            var datePart = $"GCT{today:yyMMdd}";
 
-    private string GenerateOrderNumber()
-    {
-        return $"GCT-{DateTime.UtcNow:yyyyMMddHHmmss}";
+            // Phần ngẫu nhiên: 8 ký tự đầu từ một GUID, chuyển thành chữ hoa
+            var randomPart = Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper();
+
+            orderNumber = datePart + randomPart;
+
+        } while (await _context.Orders.AnyAsync(o => o.OrderNumber == orderNumber)); 
+
+        return orderNumber;
     }
 
     private decimal ParseShippingFee(string shippingMethodValue)

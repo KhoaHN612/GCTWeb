@@ -1,193 +1,195 @@
-﻿@{
-	ViewData["Title"] = "Checkout Details";
-	Layout = "~/Views/Shared/_Layout.cshtml";
+﻿@using GCTWeb.Models.Enums
+@model GCTWeb.Models.Order
+
+@{
+  ViewData["Title"] = "Order Confirmation - " + Model.OrderNumber;
+  Layout = "~/Views/Shared/_Layout.cshtml";
 }
+
 <style>
-  .gradient-custom-2 {
-    /* fallback for old browsers */
-    background: #a1c4fd;
+  /* CSS cho progress bar giữ nguyên như bạn đã cung cấp */
+  .gradient-custom {
+    background: #f8f9fa; /* Màu nền nhẹ hơn */
+  }
+  .card-stepper { z-index: 0 }
 
-    /* Chrome 10-25, Safari 5.1-6 */
-    background: -webkit-linear-gradient(to right, rgba(161, 196, 253, 1), rgba(194, 233, 251, 1));
 
-    /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
-    background: linear-gradient(to right, rgba(161, 196, 253, 1), rgba(194, 233, 251, 1))
+  .horizontal-timeline .items {
+    border-top: 2px solid #ddd;
   }
 
-  #progressbar-1 {
-    color: #455A64;
-  }
-
-  #progressbar-1 li {
-    list-style-type: none;
-    font-size: 13px;
-    width: 33.33%;
-    float: left;
+  .horizontal-timeline .items .items-list {
     position: relative;
+    margin-right: 0;
   }
 
-  #progressbar-1 #step1:before {
-    content: "1";
-    color: #fff;
-    width: 29px;
-    margin-left: 22px;
-    padding-left: 11px;
-  }
-
-  #progressbar-1 #step2:before {
-    content: "2";
-    color: #fff;
-    width: 29px;
-  }
-
-  #progressbar-1 #step3:before {
-    content: "3";
-    color: #fff;
-    width: 29px;
-    margin-right: 22px;
-    text-align: center;
-  }
-
-  #progressbar-1 li:before {
-    line-height: 29px;
-    display: block;
-    font-size: 12px;
-    background: #455A64;
-    border-radius: 50%;
-    margin: auto;
-  }
-
-  #progressbar-1 li:after {
-    content: '';
-    width: 121%;
-    height: 2px;
-    background: #455A64;
+  .horizontal-timeline .items .items-list:before {
+    content: "";
     position: absolute;
-    left: 0%;
-    right: 0%;
-    top: 15px;
-    z-index: -1;
+    height: 8px;
+    width: 8px;
+    border-radius: 50%;
+    background-color: #ddd;
+    top: 0;
+    margin-top: -5px;
   }
 
-  #progressbar-1 li:nth-child(2):after {
-    left: 50%
+  .horizontal-timeline .items .items-list.active:before {
+    background-color: #f37a27;
   }
 
-  #progressbar-1 li:nth-child(1):after {
-    left: 25%;
-    width: 121%
+  .horizontal-timeline .items .items-list.active p{
+    background-color: #f37a27;
+    opacity: 1;
+    color: white;
   }
 
-  #progressbar-1 li:nth-child(3):after {
-    left: 25%;
-    width: 50%;
-  }
-
-  #progressbar-1 li.active:before,
-  #progressbar-1 li.active:after {
-    background: #1266f1;
-  }
-
-  .card-stepper {
-    z-index: 0
+  .horizontal-timeline .items .items-list {
+    padding-top: 15px;
   }
 </style>
-<section class="h-100 gradient-custom">
+
+<section class="gradient-custom">
   <div class="container py-5 h-100">
     <div class="row d-flex justify-content-center align-items-center h-100">
       <div class="col-lg-10 col-xl-8">
         <div class="card" style="border-radius: 10px;">
           <div class="card-header px-4 py-5">
-            <h5 class="text-muted mb-0">Thanks for your Order, <span style="color: #a8729a;">Anna</span>!</h5>
+            <h5 class="text-muted mb-0">Cảm ơn bạn đã đặt hàng, <span style="color: #0d6efd;">@(Model.ShippingRecipientName)</span>!</h5>
           </div>
+
+          @if (Model.Status == OrderStatus.Pending)
+          {
+            @*Banking infor*@
+            <div class="card-body p-4">
+              <div class="alert payment-info-box" role="alert">
+                <h4 class="alert-heading fw-bold">Thông tin thanh toán</h4>
+                <p>Vui lòng chuyển khoản với nội dung bên dưới để chúng tôi có thể xác nhận đơn hàng của bạn sớm nhất.</p>
+                <hr>
+                <div class="row align-items-center">
+                  <div class="col-md-4 text-center mb-3 mb-md-0">
+                    <div class="qr-code-wrapper">
+                      <img src="@Url.Content("~/images/qrcode_sample.png")" class="img-fluid" alt="Payment QR Code">
+                      <p class="small mt-2">Quét mã để thanh toán</p>
+                    </div>
+                  </div>
+                  <div class="col-md-8">
+                    <div class="bank-details">
+                      <p><strong>Ngân hàng:</strong> Tên Ngân Hàng Của Bạn (ví dụ: Vietcombank)</p>
+                      <p><strong>Chủ tài khoản:</strong> TÊN CHỦ TÀI KHOẢN</p>
+                      <p><strong>Số tài khoản:</strong> SỐ TÀI KHOẢN CỦA BẠN</p>
+                      <p><strong>Số tiền:</strong> <span class="fw-bold price-highlight">@Model.TotalPrice.ToString("N0") VND</span></p>
+                    </div>
+                    <hr>
+                    <div>
+                      <p class="mb-1"><strong>Nội dung chuyển khoản (bắt buộc):</strong></p>
+                      <div class="p-2 rounded transfer-syntax" id="transferSyntaxBox" title="Click để sao chép">
+                        <strong id="transferSyntaxText">@(Model.ShippingRecipientName) - @(Model.OrderNumber)</strong>
+                      </div>
+                      <small class="form-text text-muted">Vui lòng ghi đúng nội dung chuyển khoản để đơn hàng được xử lý.</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            @*End banking infor*@
+          }
+
           <div class="card-body card-stepper p-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
-              <p class="lead fw-normal mb-0" style="color: #a8729a;">Receipt</p>
-              <p class="small text-muted mb-0">Receipt Voucher : 1KAU9-84UIL</p>
+              <p class="lead fw-normal mb-0" style="color: #0d6efd;">Chi tiết đơn hàng</p>
+              <p class="small text-muted mb-0">Mã đơn hàng: <span class="fw-bold">@Model.OrderNumber</span></p>
             </div>
-            <div class="card shadow-0 border mb-4">
-              <div class="card-body">
-                <div class="row">
-                  <div class="col-md-2">
-                    <img src="https://mdbcdn.b-cdn.net/img/Photos/Horizontal/E-commerce/Products/13.webp"
-                      class="img-fluid" alt="Phone">
-                  </div>
-                  <div class="col-md-2 text-center d-flex justify-content-center align-items-center">
-                    <p class="text-muted mb-0">Samsung Galaxy</p>
-                  </div>
-                  <div class="col-md-2 text-center d-flex justify-content-center align-items-center">
-                    <p class="text-muted mb-0 small">White</p>
-                  </div>
-                  <div class="col-md-2 text-center d-flex justify-content-center align-items-center">
-                    <p class="text-muted mb-0 small">Capacity: 64GB</p>
-                  </div>
-                  <div class="col-md-2 text-center d-flex justify-content-center align-items-center">
-                    <p class="text-muted mb-0 small">Qty: 1</p>
-                  </div>
-                  <div class="col-md-2 text-center d-flex justify-content-center align-items-center">
-                    <p class="text-muted mb-0 small">$499</p>
+
+            @* Lặp qua các sản phẩm trong đơn hàng *@
+            @if (Model.OrderDetails != null && Model.OrderDetails.Any())
+            {
+              @foreach (var item in Model.OrderDetails)
+              {
+                <div class="card shadow-0 border mb-4">
+                  <div class="card-body">
+                    <div class="row">
+                      <div class="col-md-2">
+                        <img src="@Url.Content(item.Product?.PrimaryImage?.ImageUrl ?? "~/images/placeholder.png")"
+                             class="img-fluid" alt="@item.ProductName">
+                      </div>
+                      <div class="col-md-3 text-center d-flex justify-content-center align-items-center">
+                        <p class="text-muted mb-0">@item.ProductName</p>
+                      </div>
+                      <div class="col-md-2 text-center d-flex justify-content-center align-items-center">
+                        <p class="text-muted mb-0 small">@item.ProductSku</p>
+                      </div>
+                      <div class="col-md-3 text-center d-flex justify-content-center align-items-center">
+                        <p class="text-muted mb-0 small">Số lượng: @item.Quantity</p>
+                      </div>
+                      <div class="col-md-2 text-center d-flex justify-content-center align-items-center">
+                        <p class="text-muted mb-0 small">@item.UnitPrice.ToString("N0") VND</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
-            <div class="card shadow-0 border mb-4">
-              <div class="card-body">
-                <div class="row">
-                  <div class="col-md-2">
-                    <img src="https://mdbcdn.b-cdn.net/img/Photos/Horizontal/E-commerce/Products/1.webp"
-                      class="img-fluid" alt="Phone">
-                  </div>
-                  <div class="col-md-2 text-center d-flex justify-content-center align-items-center">
-                    <p class="text-muted mb-0">iPad</p>
-                  </div>
-                  <div class="col-md-2 text-center d-flex justify-content-center align-items-center">
-                    <p class="text-muted mb-0 small">Pink rose</p>
-                  </div>
-                  <div class="col-md-2 text-center d-flex justify-content-center align-items-center">
-                    <p class="text-muted mb-0 small">Capacity: 32GB</p>
-                  </div>
-                  <div class="col-md-2 text-center d-flex justify-content-center align-items-center">
-                    <p class="text-muted mb-0 small">Qty: 1</p>
-                  </div>
-                  <div class="col-md-2 text-center d-flex justify-content-center align-items-center">
-                    <p class="text-muted mb-0 small">$399</p>
-                  </div>
+              }
+            }
+
+            <div class="row">
+              <div class="col-lg-12">
+
+                <div class="horizontal-timeline">
+
+                  @* Progress Bar Trạng thái Đơn hàng *@
+                  @{
+                    var pendingClass = Model.Status >= OrderStatus.Pending ? "active" : "";
+                    var processingClass = Model.Status >= OrderStatus.Processing ? "active" : "";
+                    var shippedClass = Model.Status >= OrderStatus.Shipped ? "active" : "";
+                    var deliveredClass = Model.Status >= OrderStatus.Delivered ? "active" : "";
+                  }
+                  
+                  <ul class="list-inline items d-flex justify-content-between">
+                    <li class="list-inline-item items-list @pendingClass">
+                      <p class="py-1 px-2 rounded">Đang chờ</p>
+                    </li>
+                    
+                    <li class="list-inline-item items-list @processingClass">
+                      <p class="py-1 px-2 rounded">Đã xác nhận</p>
+                    </li>
+                    <li class="list-inline-item items-list @shippedClass">
+                      <p class="py-1 px-2 rounded">Đang giao</p>
+                    </li>
+                    <li class="list-inline-item items-list text-end @deliveredClass" style="margin-right: 8px;">
+                      <p style="margin-right: -8px;">Đã giao</p>
+                    </li>
+                  </ul>
+
                 </div>
+
               </div>
             </div>
 
-            <ul id="progressbar-1" class="mx-0 mt-0 mb-5 px-0 pt-0 pb-4">
-              <li class="step0 active" id="step1"><span
-                  style="margin-left: 22px; margin-top: 12px;">PLACED</span></li>
-              <li class="step0 active text-center" id="step2"><span>SHIPPED</span></li>
-              <li class="step0 text-muted text-end" id="step3"><span
-                  style="margin-right: 22px;">DELIVERED</span></li>
-            </ul>
-            
             <div class="d-flex justify-content-between pt-2">
-              <p class="fw-bold mb-0">Order Details</p>
-              <p class="text-muted mb-0"><span class="fw-bold me-4">Total</span> $898.00</p>
+              <p class="fw-bold mb-0">Thông tin người nhận</p>
+              <p class="text-muted mb-0"><span class="fw-bold me-4">Tạm tính</span> @Model.Subtotal.ToString("N0") VND</p>
             </div>
 
             <div class="d-flex justify-content-between pt-2">
-              <p class="text-muted mb-0">Invoice Number : 788152</p>
-              <p class="text-muted mb-0"><span class="fw-bold me-4">Discount</span> $19.00</p>
+              <p class="text-muted mb-0">@Model.ShippingRecipientName</p>
+              <p class="text-muted mb-0"><span class="fw-bold me-4">Giảm giá</span> -@Model.DiscountAmount.ToString("N0") VND</p>
             </div>
 
             <div class="d-flex justify-content-between">
-              <p class="text-muted mb-0">Invoice Date : 22 Dec,2019</p>
-              <p class="text-muted mb-0"><span class="fw-bold me-4">GST 18%</span> 123</p>
+              <p class="text-muted mb-0">@Model.ShippingPhone</p>
+              <p class="text-muted mb-0"><span class="fw-bold me-4">Phí vận chuyển</span> @Model.ShippingFee.ToString("N0") VND</p>
             </div>
 
             <div class="d-flex justify-content-between mb-5">
-              <p class="text-muted mb-0">Recepits Voucher : 18KU-62IIK</p>
-              <p class="text-muted mb-0"><span class="fw-bold me-4">Delivery Charges</span> Free</p>
+              <p class="text-muted mb-0">@Model.ShippingAddress</p>
+              <p class="text-muted mb-0"> </p> <!-- Để trống cho cân đối -->
             </div>
           </div>
           <div class="card-footer border-0 px-4 py-5"
-            style="background-color: #a8729a; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;">
-            <h5 class="d-flex align-items-center justify-content-end text-white text-uppercase mb-0">Total
-              paid: <span class="h2 mb-0 ms-2">$1040</span></h5>
+               style="background-color: #0d6efd; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;">
+            <h5 class="d-flex align-items-center justify-content-end text-white text-uppercase mb-0">
+              Tổng cộng: <span class="h2 mb-0 ms-2">@Model.TotalPrice.ToString("N0") VND</span>
+            </h5>
           </div>
         </div>
       </div>

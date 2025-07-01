@@ -100,7 +100,7 @@ public class Order
 
     // Navigation properties
     [ForeignKey(nameof(UserId))]
-    public virtual ApplicationUser User { get; set; } = null!; 
+    public virtual ApplicationUser? User { get; set; } = null!; 
 
     [ForeignKey(nameof(AppliedVoucherId))]
     public virtual Voucher? AppliedVoucher { get; set; }
