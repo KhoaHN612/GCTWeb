@@ -1,0 +1,517 @@
+﻿@model GCTWeb.Models.ViewModels.CheckoutViewModel
+
+@{
+	ViewData["Title"] = "Checkout Details";
+	Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+	/* General Page Styles */
+	.page-checkout {
+		background-color: #f8f9fa;
+		font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+	}
+
+	.price-highlight {
+		color: #dc3545;
+		font-weight: 500;
+	}
+
+	.focused-checkout-logo img {
+		max-width: 250px;
+		height: auto;
+	}
+
+	/* Breadcrumbs */
+	.checkout-breadcrumbs {
+		font-size: 0.9rem;
+		color: #6c757d;
+		margin-bottom: 2rem;
+	}
+	.checkout-breadcrumbs a {
+		color: #0d6efd;
+		text-decoration: none;
+	}
+	.checkout-breadcrumbs a.current {
+		color: #212529;
+		font-weight: 600;
+	}
+	.checkout-breadcrumbs .divider {
+		margin: 0 0.75em;
+		color: #adb5bd;
+	}
+
+	/* Section Titles */
+	.checkout-section-title {
+		font-size: 1.5rem;
+		font-weight: 500;
+		margin-bottom: 1.5rem;
+		padding-bottom: 0.75rem;
+		border-bottom: 1px solid #dee2e6;
+	}
+
+	/* Form Fields Styling */
+	.form-row-checkout {
+		margin-bottom: 1.25rem;
+	}
+	.form-row-checkout label:not(.form-check-label) { /* Không áp dụng cho label của checkbox/radio bên trong form-check */
+		font-weight: 500;
+		margin-bottom: .35rem;
+		display: block;
+		font-size: 0.9rem;
+		color: #495057;
+	}
+	.form-row-checkout label .required {
+		color: #dc3545;
+		margin-left: .2rem;
+	}
+	.form-control, .form-select {
+		border-radius: .25rem;
+		border: 1px solid #ced4da;
+		padding: .5rem .75rem;
+		font-size: 0.95rem;
+	}
+	.form-control:focus, .form-select:focus {
+		border-color: #86b7fe;
+		box-shadow: 0 0 0 .25rem rgba(13, 110, 253, .25);
+	}
+	/* Căn chỉnh cho radio/checkbox và label */
+	.form-check.d-flex.align-items-center .form-check-input {
+		margin-top: 0; /* Reset margin top nếu có */
+	}
+	.form-check.d-flex.align-items-center .form-check-label {
+		margin-bottom: 0; /* Reset margin bottom */
+	}
+
+
+	/* Order Review Section */
+	.order-review-box {
+		background-color: #ffffff;
+		border: 1px solid #dee2e6;
+		border-radius: .375rem;
+		padding: 1.5rem;
+	}
+
+	/* Target vào table bên trong div#order_review hoặc table.shop_table */
+	#order_review table.shop_table {
+		width: 100%;
+		margin-bottom: 1rem;
+		font-size: 0.9rem;
+		table-layout: fixed;
+	}
+
+	#order_review table.shop_table th,
+	#order_review table.shop_table td {
+		padding: 0.75rem 0.5rem;
+		border-bottom: 1px solid #e9ecef;
+		vertical-align: middle;
+		word-wrap: break-word;
+	}
+
+	#order_review table.shop_table thead th {
+		border-bottom-width: 2px;
+		border-color: #adb5bd;
+		color: #495057;
+		font-weight: 600;
+		text-transform: uppercase;
+		font-size: 0.85rem;
+	}
+
+	/* --- ĐIỀU CHỈNH ĐỘ RỘNG CỘT --- */
+	#order_review table.shop_table th.product-name,
+	#order_review table.shop_table td.product-name {
+		width: 55%;
+		text-align: left;
+	}
+
+	#order_review table.shop_table th.product-total, /* Tiêu đề cột tạm tính (nếu có) */
+	#order_review table.shop_table td.product-total { /* Giá trị tạm tính của từng sản phẩm */
+		width: 45%;
+		text-align: right;
+	}
+
+	/* Style cho tfoot - phần tổng kết */
+	#order_review table.shop_table tfoot th {
+		font-weight: 600;
+		text-align: left;
+		width: 65%; /* Điều chỉnh lại cho phù hợp, ví dụ: 65% */
+		border-top: 1px solid #dee2e6; /* Thêm đường kẻ trên cho các hàng tfoot */
+	}
+	#order_review table.shop_table tfoot td {
+		text-align: right;
+		font-weight: 500;
+		width: 35%; /* Điều chỉnh lại cho phù hợp, ví dụ: 35% */
+		border-top: 1px solid #dee2e6;
+	}
+
+	/* Style cho tfoot - phần shipping */
+	#order_review table.shop_table tfoot div.shipping-custom-layout {
+	}
+	#order_review table.shop_table tfoot div.shipping-label {
+		padding-right: 10px;
+		font-weight: 600;
+		text-align: left;
+	}
+	#order_review table.shop_table tfoot div.shipping-options {
+		text-align: left;
+	}
+
+	/* Riêng cho hàng Tổng cộng cuối cùng */
+	#order_review table.shop_table tfoot tr.order-total th,
+	#order_review table.shop_table tfoot tr.order-total td {
+		font-size: 1.1rem;
+		font-weight: bold;
+		color: #212529;
+		border-top: 2px solid #212529; /* Đường kẻ đậm hơn cho hàng tổng */
+		padding-top: 0.75rem;
+		padding-bottom: 0.75rem;
+	}
+	/* ----------------------------- */
+
+
+	#order_review table.shop_table .product-name .product-quantity {
+		color: #6c757d;
+		font-size: 0.85em;
+		display: block;
+		margin-top: 2px;
+	}
+	/* Payment Methods */
+	.payment_methods {
+		list-style: none;
+		padding-left: 0;
+	}
+	.payment_methods li {
+		padding: 0.75rem;
+		border: 1px solid #e9ecef;
+		margin-bottom: 0.75rem;
+		border-radius: .25rem;
+	}
+	/* Không cần style riêng cho .payment_methods li label và input nữa nếu dùng d-flex */
+	.payment_box {
+		background-color: #f8f9fa;
+		padding: 0.75rem;
+		margin-top: 0.75rem;
+		border-radius: .25rem;
+		font-size: 0.85rem;
+		color: #495057;
+		border-left: 3px solid #0d6efd;
+	}
+	.place-order-button {
+		font-size: 1.1rem;
+		font-weight: 500;
+		padding: 0.75rem 1.5rem;
+	}
+	.coupon-toggle a {
+		font-size: 0.9rem;
+	}
+	.checkout-coupon-form {
+		border: 1px dashed #adb5bd;
+		padding: 1rem;
+		margin-bottom: 1.5rem;
+		border-radius: .25rem;
+	}
+</style>
+
+<div id="main" class="page-wrapper page-checkout py-4">
+	<div class="focused-checkout-logo text-center mb-4">
+		<a href="@Url.Action("Index", "Home")"><img width="250" src="@Url.Content("~/images/icons/logo.JPG")" alt="GCT Store"></a>
+	</div>
+
+	<div class="container">
+		<div class="top-divider full-width border-bottom mb-4"></div>
+
+		<div class="focused-checkout-header text-center pb-4">
+			<nav class="breadcrumbs checkout-breadcrumbs h5">
+				<a href="@Url.Action("Index", "Cart")">Giỏ hàng</a>
+				<span class="divider"><i class="fas fa-chevron-right"></i></span>
+				<a href="#" class="current">Chi tiết thanh toán</a>
+				<span class="divider"><i class="fas fa-chevron-right"></i></span>
+				<a href="#" class="no-click text-muted">Đơn hàng hoàn tất</a>
+			</nav>
+		</div>
+
+		<div class="coupon-toggle mb-4 text-center">
+			<div class="alert alert-info d-inline-block p-2" role="alert" style="font-size: 0.9rem;">
+				Bạn có mã ưu đãi? <a href="#" class="alert-link fw-bold" id="showCouponForm">Ấn vào đây để nhập mã</a>
+			</div>
+		</div>
+		<form class="checkout_coupon checkout-coupon-form mb-4" method="post" style="display:none;" id="checkoutCouponForm">
+			<p class="form-row-checkout">Nhập mã giảm giá của bạn nếu có.</p>
+			<div class="input-group">
+				<input type="text" name="coupon_code" class="form-control" placeholder="Mã ưu đãi" id="coupon_code_checkout" value="">
+				<button type="submit" class="btn btn-secondary" name="apply_coupon" value="Áp dụng">Áp dụng</button>
+			</div>
+		</form>
+
+
+		<form name="checkout" method="post" class="checkout" asp-controller="Checkout" asp-action="Index">
+			@Html.AntiForgeryToken()
+			<div class="row pt-0 ">
+				@* CỘT TRÁI - FORM THÔNG TIN *@
+				<div class="col-lg-7 mb-4 mb-lg-0">
+					<div class="checkout-form-section">
+						<h3 class="checkout-section-title">Thông tin thanh toán và giao hàng</h3>
+						<div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+						<div class="row">
+							<div class="col-12 form-row-checkout">
+								<label asp-for="BillingFullName" class="form-label">Họ và tên <span class="required">*</span></label>
+								<input asp-for="BillingFullName" class="form-control" />
+								<span asp-validation-for="BillingFullName" class="text-danger"></span>
+							</div>
+							<div class="col-md-6 form-row-checkout">
+								<label asp-for="BillingPhoneNumber" class="form-label">Số điện thoại <span class="required">*</span></label>
+								<input asp-for="BillingPhoneNumber" class="form-control" />
+								<span asp-validation-for="BillingPhoneNumber" class="text-danger"></span>
+							</div>
+							<div class="col-md-6 form-row-checkout">
+								<label asp-for="BillingEmail" class="form-label">Địa chỉ email <span class="required">*</span></label>
+								<input asp-for="BillingEmail" class="form-control" />
+								<span asp-validation-for="BillingEmail" class="text-danger"></span>
+							</div>
+							<div class="col-md-4 form-row-checkout">
+								<label asp-for="BillingState" class="form-label">Tỉnh/Thành phố <span class="required">*</span></label>
+								<select asp-for="BillingState" id="province" class="form-select"></select>
+								<span asp-validation-for="BillingState" class="text-danger"></span>
+							</div>
+							<div class="col-md-4 form-row-checkout">
+								<label asp-for="BillingCity" class="form-label">Quận/Huyện <span class="required">*</span></label>
+								<select asp-for="BillingCity" id="district" class="form-select"></select>
+								<span asp-validation-for="BillingCity" class="text-danger"></span>
+							</div>
+							<div class="col-md-4 form-row-checkout">
+								<label asp-for="BillingWard" class="form-label">Phường/Xã <span class="required">*</span></label>
+								<select asp-for="BillingWard" id="ward" class="form-select"></select>
+								<span asp-validation-for="BillingWard" class="text-danger"></span>
+							</div>
+							<div class="col-12 form-row-checkout">
+								<label asp-for="BillingAddress1" class="form-label">Địa chỉ (Số nhà, tên đường) <span class="required">*</span></label>
+								<input asp-for="BillingAddress1" class="form-control"/>
+								<span asp-validation-for="BillingAddress1" class="text-danger"></span>
+							</div>
+							<div class="form-row-checkout">
+								<label asp-for="OrderNotes" class="form-label">Ghi chú đơn hàng (tuỳ chọn)</label>
+								<textarea asp-for="OrderNotes" class="form-control" rows="3"></textarea>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				@* CỘT PHẢI - TÓM TẮT ĐƠN HÀNG *@
+				<div class="col-lg-5">
+					<div class="order-review-box">
+						<h3 class="checkout-section-title">Đơn hàng của bạn</h3>
+						<div id="order_review">
+							<table class="shop_table">
+								<thead>
+								<tr>
+									<th class="product-name">Sản phẩm</th>
+									<th class="product-total">Tạm tính</th>
+								</tr>
+								</thead>
+								<tbody>
+								@if (Model.Cart != null && Model.Cart.Items.Any())
+								{
+									@foreach (var item in Model.Cart.Items)
+									{
+										<tr class="cart_item">
+											<td class="product-name">
+												@item.ProductName
+												<strong class="product-quantity">× @item.Quantity</strong>
+											</td>
+											<td class="product-total">
+												<span class="amount price-highlight">@item.ItemTotalPrice.ToString("N0")<span class="currencySymbol">₫</span></span>
+											</td>
+										</tr>
+									}
+								}
+								</tbody>
+								<tfoot>
+								<tr class="cart-subtotal">
+									<th>Tạm tính</th>
+									<td><span class="amount price-highlight" id="checkoutSubtotal">@Model.Cart.TotalPrice.ToString("N0")<span class="currencySymbol">₫</span></span></td>
+								</tr>
+								@*<tr class="shipping-totals">
+									<th>Vận chuyển</th>
+									<td>
+										<ul id="shipping_method_options_checkout" class="list-unstyled mb-0">
+											<li class="mb-1">
+												<div class="form-check d-flex align-items-center">
+													<input asp-for="ShippingMethod" type="radio" class="form-check-input me-2" value="pickup" checked="checked" id="shipping_pickup">
+													<label for="shipping_pickup" class="form-check-label mb-0">Đến nhận tại cửa hàng (Miễn phí)</label>
+												</div>
+											</li>
+											<li class="mb-1">
+												<div class="form-check d-flex align-items-center">
+													<input asp-for="ShippingMethod" type="radio" class="form-check-input me-2" value="standard_25000" id="shipping_standard">
+													<label for="shipping_standard" class="form-check-label mb-0">Giao Hàng Tiêu Chuẩn: <span class="amount price-highlight">25,000<span class="currencySymbol">₫</span></span></label>
+												</div>
+											</li>
+										</ul>
+										<span asp-validation-for="ShippingMethod" class="text-danger"></span>
+									</td>
+								</tr>*@
+
+								<tr class="shipping-totals">
+									<td colspan="2" style="padding: 0.75rem 0.5rem; border-bottom: 1px solid #e9ecef;">
+										<div class="shipping-custom-layout d-flex align-items-start">
+											<div class="shipping-label">Vận chuyển</div>
+											<div class="shipping-options" >
+												<ul id="shipping_method_options_checkout" class="list-unstyled mb-0">
+													<li class="mb-1">
+														<div class="form-check d-flex align-items-left">
+															<input asp-for="ShippingMethod" type="radio" class="form-check-input me-2" value="pickup" id="shipping_pickup">
+															<label for="shipping_pickup" class="form-check-label mb-0">Đến nhận tại cửa hàng (Miễn phí)</label>
+														</div>
+													</li>
+													<li class="mb-1">
+														<div class="form-check d-flex align-items-left">
+															<input asp-for="ShippingMethod" type="radio" class="form-check-input me-2" value="standard_25000" id="shipping_standard" checked="checked">
+															<label for="shipping_standard" class="form-check-label mb-0">Giao Hàng Tiêu Chuẩn: <span class="amount price-highlight">25,000<span class="currencySymbol">₫</span></span></label>
+														</div>
+													</li>
+												</ul>
+											</div>
+										</div>
+									</td>
+								</tr>
+								
+								<tr class="order-total">
+									<th>Tổng cộng</th>
+									<td><strong><span class="amount price-highlight" id="checkoutTotal">@Model.Cart.TotalPrice.ToString("N0")<span class="currencySymbol">₫</span></span></strong></td>
+								</tr>
+								
+								</tfoot>
+							</table>
+
+							
+
+							<div id="payment" class="mt-4">
+								<p class="fw-bold">Phương thức thanh toán</p>
+								<ul class="payment_methods">
+									<li class="payment_method_bacs">
+										<div class="form-check d-flex align-items-start">
+											<input asp-for="PaymentMethod" type="radio" class="form-check-input me-2" value="bacs" checked="checked" id="payment_method_bacs">
+											<label for="payment_method_bacs" class="form-check-label mb-0">Chuyển khoản ngân hàng</label>
+										</div>
+										<div class="payment_box payment_method_bacs mt-2">
+											<p>Thực hiện thanh toán vào tài khoản ngân hàng của chúng tôi. Chúng tôi sẽ liên hệ xác nhận và giao hàng sau khi nhận được thanh toán.</p>
+										</div>
+									</li>
+									<li class="payment_method_cod mt-2">
+										<div class="form-check d-flex align-items-start">
+											<input asp-for="PaymentMethod" type="radio" class="form-check-input me-2" value="cod" id="payment_method_cod">
+											<label for="payment_method_cod" class="form-check-label mb-0">Trả tiền mặt khi nhận hàng (COD)</label>
+										</div>
+										<div class="payment_box payment_method_cod mt-2" style="display:none;">
+											<p>Bạn sẽ trả tiền mặt trực tiếp cho nhân viên giao hàng.</p>
+										</div>
+									</li>
+								</ul>
+								<span asp-validation-for="PaymentMethod" class="text-danger"></span>
+								<div class="form-row place-order mt-4">
+									<button type="submit" class="btn btn-primary btn-lg w-100 place-order-button" id="place_order_button" @(Model.Cart.IsEmpty ? "disabled" : "")>Đặt hàng</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</form>
+	</div>
+</div>
+
+@section Scripts {
+	<script>
+		$(document).ready(function() {
+			const provinceSelect = $('#province');
+			const districtSelect = $('#district');
+			const wardSelect = $('#ward');
+
+			function populateDropdown(selectElement, items, defaultText) {
+				selectElement.empty().append($('<option>', { value: "", text: defaultText, disabled: true, selected: true }));
+				if (items && items.length > 0) {
+					items.sort((a, b) => a.name.localeCompare(b.name, 'vi')); // Sắp xếp
+					items.forEach(item => {
+						selectElement.append($('<option>', { value: item.name, 'data-code': item.code, text: item.name }));
+					});
+				}
+				selectElement.prop('disabled', !items || items.length === 0);
+			}
+
+			// Tải dữ liệu từ file JSON cục bộ
+			let addressData = [];
+			$.getJSON("@Url.Content("~/data/vietnam_provinces.json")", function(data) {
+				addressData = data;
+				populateDropdown(provinceSelect, addressData, "Chọn tỉnh/thành...");
+				provinceSelect.prop('disabled', false);
+			}).fail(function() { console.error("Could not load address data."); });
+
+			// Sự kiện khi thay đổi Tỉnh/Thành
+			provinceSelect.on('change', function() {
+				const selectedProvinceName = $(this).val();
+				districtSelect.empty().prop('disabled', true);
+				wardSelect.empty().prop('disabled', true);
+				populateDropdown(districtSelect, [], "Chọn quận/huyện...");
+				populateDropdown(wardSelect, [], "Chọn xã/phường...");
+
+				if (selectedProvinceName) {
+					const selectedProvince = addressData.find(p => p.name === selectedProvinceName);
+					if (selectedProvince && selectedProvince.districts) {
+						populateDropdown(districtSelect, selectedProvince.districts, "Chọn quận/huyện...");
+					}
+				}
+			});
+
+			// Sự kiện khi thay đổi Quận/Huyện
+			districtSelect.on('change', function() {
+				const selectedProvinceName = provinceSelect.val();
+				const selectedDistrictName = $(this).val();
+				wardSelect.empty().prop('disabled', true);
+				populateDropdown(wardSelect, [], "Chọn xã/phường...");
+
+				if (selectedProvinceName && selectedDistrictName) {
+					const selectedProvince = addressData.find(p => p.name === selectedProvinceName);
+					if (selectedProvince) {
+						const selectedDistrict = selectedProvince.districts.find(d => d.name === selectedDistrictName);
+						if (selectedDistrict && selectedDistrict.wards) {
+							populateDropdown(wardSelect, selectedDistrict.wards, "Chọn xã/phường...");
+						}
+					}
+				}
+			});
+
+			// Logic tính lại tổng tiền khi chọn shipping
+			$('input[name="ShippingMethod"]').on('change', function() {
+				var subtotal = parseFloat("@Model.Cart.TotalPrice");
+				var shippingCost = 0;
+				var shippingValue = $(this).val();
+				if (shippingValue && shippingValue.startsWith("standard_")) {
+					shippingCost = parseFloat(shippingValue.split('_')[1]) || 0;
+				}
+				var total = subtotal + shippingCost;
+				$('#checkoutTotal').text(total.toLocaleString('vi-VN') + '₫');
+			}).trigger('change'); // Kích hoạt lần đầu
+
+			// Toggle hiển thị payment_box
+			$('input[name="PaymentMethod"]').on('change', function() {
+				$('.payment_box').slideUp();
+				if (this.checked) {
+					$(this).closest('li').find('.payment_box').slideDown();
+				}
+			});
+			$('input[name="PaymentMethod"]:checked').closest('li').find('.payment_box').show();
+
+			// Toggle hiển thị địa chỉ giao hàng khác
+			$('#shipToDifferentAddressCheckbox').change(function() {
+				$('.shipping_address_fields').toggle(this.checked);
+			}).trigger('change');
+
+			// Toggle form mã giảm giá
+			$('#showCouponForm').click(function(e) {
+				e.preventDefault();
+				$('#checkoutCouponForm').slideToggle();
+			});
+
+		});
+	</script>
+}

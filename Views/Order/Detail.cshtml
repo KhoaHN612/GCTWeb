@@ -1,0 +1,198 @@
+﻿@using GCTWeb.Models.Enums
+@model GCTWeb.Models.Order
+
+@{
+  ViewData["Title"] = "Order Confirmation - " + Model.OrderNumber;
+  Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+  /* CSS cho progress bar giữ nguyên như bạn đã cung cấp */
+  .gradient-custom {
+    background: #f8f9fa; /* Màu nền nhẹ hơn */
+  }
+  .card-stepper { z-index: 0 }
+
+
+  .horizontal-timeline .items {
+    border-top: 2px solid #ddd;
+  }
+
+  .horizontal-timeline .items .items-list {
+    position: relative;
+    margin-right: 0;
+  }
+
+  .horizontal-timeline .items .items-list:before {
+    content: "";
+    position: absolute;
+    height: 8px;
+    width: 8px;
+    border-radius: 50%;
+    background-color: #ddd;
+    top: 0;
+    margin-top: -5px;
+  }
+
+  .horizontal-timeline .items .items-list.active:before {
+    background-color: #f37a27;
+  }
+
+  .horizontal-timeline .items .items-list.active p{
+    background-color: #f37a27;
+    opacity: 1;
+    color: white;
+  }
+
+  .horizontal-timeline .items .items-list {
+    padding-top: 15px;
+  }
+</style>
+
+<section class="gradient-custom">
+  <div class="container py-5 h-100">
+    <div class="row d-flex justify-content-center align-items-center h-100">
+      <div class="col-lg-10 col-xl-8">
+        <div class="card" style="border-radius: 10px;">
+          <div class="card-header px-4 py-5">
+            <h5 class="text-muted mb-0">Cảm ơn bạn đã đặt hàng, <span style="color: #0d6efd;">@(Model.ShippingRecipientName)</span>!</h5>
+          </div>
+
+          @if (Model.Status == OrderStatus.Pending)
+          {
+            @*Banking infor*@
+            <div class="card-body p-4">
+              <div class="alert payment-info-box" role="alert">
+                <h4 class="alert-heading fw-bold">Thông tin thanh toán</h4>
+                <p>Vui lòng chuyển khoản với nội dung bên dưới để chúng tôi có thể xác nhận đơn hàng của bạn sớm nhất.</p>
+                <hr>
+                <div class="row align-items-center">
+                  <div class="col-md-4 text-center mb-3 mb-md-0">
+                    <div class="qr-code-wrapper">
+                      <img src="@Url.Content("~/images/qrcode_sample.png")" class="img-fluid" alt="Payment QR Code">
+                      <p class="small mt-2">Quét mã để thanh toán</p>
+                    </div>
+                  </div>
+                  <div class="col-md-8">
+                    <div class="bank-details">
+                      <p><strong>Ngân hàng:</strong> Tên Ngân Hàng Của Bạn (ví dụ: Vietcombank)</p>
+                      <p><strong>Chủ tài khoản:</strong> TÊN CHỦ TÀI KHOẢN</p>
+                      <p><strong>Số tài khoản:</strong> SỐ TÀI KHOẢN CỦA BẠN</p>
+                      <p><strong>Số tiền:</strong> <span class="fw-bold price-highlight">@Model.TotalPrice.ToString("N0") VND</span></p>
+                    </div>
+                    <hr>
+                    <div>
+                      <p class="mb-1"><strong>Nội dung chuyển khoản (bắt buộc):</strong></p>
+                      <div class="p-2 rounded transfer-syntax" id="transferSyntaxBox" title="Click để sao chép">
+                        <strong id="transferSyntaxText">@(Model.ShippingRecipientName) - @(Model.OrderNumber)</strong>
+                      </div>
+                      <small class="form-text text-muted">Vui lòng ghi đúng nội dung chuyển khoản để đơn hàng được xử lý.</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            @*End banking infor*@
+          }
+
+          <div class="card-body card-stepper p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <p class="lead fw-normal mb-0" style="color: #0d6efd;">Chi tiết đơn hàng</p>
+              <p class="small text-muted mb-0">Mã đơn hàng: <span class="fw-bold">@Model.OrderNumber</span></p>
+            </div>
+
+            @* Lặp qua các sản phẩm trong đơn hàng *@
+            @if (Model.OrderDetails != null && Model.OrderDetails.Any())
+            {
+              @foreach (var item in Model.OrderDetails)
+              {
+                <div class="card shadow-0 border mb-4">
+                  <div class="card-body">
+                    <div class="row">
+                      <div class="col-md-2">
+                        <img src="@Url.Content(item.Product?.PrimaryImage?.ImageUrl ?? "~/images/placeholder.png")"
+                             class="img-fluid" alt="@item.ProductName">
+                      </div>
+                      <div class="col-md-3 text-center d-flex justify-content-center align-items-center">
+                        <p class="text-muted mb-0">@item.ProductName</p>
+                      </div>
+                      <div class="col-md-2 text-center d-flex justify-content-center align-items-center">
+                        <p class="text-muted mb-0 small">@item.ProductSku</p>
+                      </div>
+                      <div class="col-md-3 text-center d-flex justify-content-center align-items-center">
+                        <p class="text-muted mb-0 small">Số lượng: @item.Quantity</p>
+                      </div>
+                      <div class="col-md-2 text-center d-flex justify-content-center align-items-center">
+                        <p class="text-muted mb-0 small">@item.UnitPrice.ToString("N0") VND</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              }
+            }
+
+            <div class="row">
+              <div class="col-lg-12">
+
+                <div class="horizontal-timeline">
+
+                  @* Progress Bar Trạng thái Đơn hàng *@
+                  @{
+                    var pendingClass = Model.Status >= OrderStatus.Pending ? "active" : "";
+                    var processingClass = Model.Status >= OrderStatus.Processing ? "active" : "";
+                    var shippedClass = Model.Status >= OrderStatus.Shipped ? "active" : "";
+                    var deliveredClass = Model.Status >= OrderStatus.Delivered ? "active" : "";
+                  }
+                  
+                  <ul class="list-inline items d-flex justify-content-between">
+                    <li class="list-inline-item items-list @pendingClass">
+                      <p class="py-1 px-2 rounded">Đang chờ</p>
+                    </li>
+                    
+                    <li class="list-inline-item items-list @processingClass">
+                      <p class="py-1 px-2 rounded">Đã xác nhận</p>
+                    </li>
+                    <li class="list-inline-item items-list @shippedClass">
+                      <p class="py-1 px-2 rounded">Đang giao</p>
+                    </li>
+                    <li class="list-inline-item items-list text-end @deliveredClass" style="margin-right: 8px;">
+                      <p style="margin-right: -8px;">Đã giao</p>
+                    </li>
+                  </ul>
+
+                </div>
+
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-between pt-2">
+              <p class="fw-bold mb-0">Thông tin người nhận</p>
+              <p class="text-muted mb-0"><span class="fw-bold me-4">Tạm tính</span> @Model.Subtotal.ToString("N0") VND</p>
+            </div>
+
+            <div class="d-flex justify-content-between pt-2">
+              <p class="text-muted mb-0">@Model.ShippingRecipientName</p>
+              <p class="text-muted mb-0"><span class="fw-bold me-4">Giảm giá</span> -@Model.DiscountAmount.ToString("N0") VND</p>
+            </div>
+
+            <div class="d-flex justify-content-between">
+              <p class="text-muted mb-0">@Model.ShippingPhone</p>
+              <p class="text-muted mb-0"><span class="fw-bold me-4">Phí vận chuyển</span> @Model.ShippingFee.ToString("N0") VND</p>
+            </div>
+
+            <div class="d-flex justify-content-between mb-5">
+              <p class="text-muted mb-0">@Model.ShippingAddress</p>
+              <p class="text-muted mb-0"> </p> <!-- Để trống cho cân đối -->
+            </div>
+          </div>
+          <div class="card-footer border-0 px-4 py-5"
+               style="background-color: #0d6efd; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;">
+            <h5 class="d-flex align-items-center justify-content-end text-white text-uppercase mb-0">
+              Tổng cộng: <span class="h2 mb-0 ms-2">@Model.TotalPrice.ToString("N0") VND</span>
+            </h5>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

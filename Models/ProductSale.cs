@@ -1,4 +1,6 @@
-﻿namespace GCTWeb.Models;
+﻿using GCTWeb.Models.Enums;
+
+namespace GCTWeb.Models;
 
 [Table("product_sales")]
 [Index(nameof(ProductId))]
