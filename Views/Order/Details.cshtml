@@ -6,6 +6,22 @@
   Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
+@functions {
+  public string RemoveDiacritics(string text)
+  {
+    var normalized = text.Normalize(System.Text.NormalizationForm.FormD);
+    var sb = new System.Text.StringBuilder();
+    foreach (var ch in normalized)
+    {
+      if (System.Globalization.CharUnicodeInfo.GetUnicodeCategory(ch) != System.Globalization.UnicodeCategory.NonSpacingMark)
+      {
+        sb.Append(ch);
+      }
+    }
+    return sb.ToString().Normalize(System.Text.NormalizationForm.FormC);
+  }
+}
+
 <style>
   /* CSS cho progress bar giữ nguyên như bạn đã cung cấp */
   .gradient-custom {
@@ -84,7 +100,7 @@
                     <div>
                       <p class="mb-1"><strong>Nội dung chuyển khoản (bắt buộc):</strong></p>
                       <div class="p-2 rounded transfer-syntax" id="transferSyntaxBox" title="Click để sao chép">
-                        <strong id="transferSyntaxText">@(Model.ShippingRecipientName) - @(Model.OrderNumber)</strong>
+                        <strong id="transferSyntaxText">@(RemoveDiacritics(Model.ShippingRecipientName)) - @(Model.OrderNumber)</strong>
                       </div>
                       <small class="form-text text-muted">Vui lòng ghi đúng nội dung chuyển khoản để đơn hàng được xử lý.</small>
                     </div>

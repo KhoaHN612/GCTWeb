@@ -25,6 +25,6 @@ public class OrderController : Controller
 
         if (order == null) return NotFound();
     
-        return View("Detail", order);
+        return View("Details", order);
     }
 }

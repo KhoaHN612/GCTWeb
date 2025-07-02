@@ -1,0 +1,203 @@
+﻿@using GCTWeb.Models.Enums
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model IEnumerable<GCTWeb.Models.Order>
+
+@{
+    ViewData["Title"] = "Order Management";
+    Layout = "~/Views/Admin/Shared/_LayoutAdmin.cshtml"; 
+}
+
+@functions {
+    public string RemoveDiacritics(string text)
+    {
+        var normalized = text.Normalize(System.Text.NormalizationForm.FormD);
+        var sb = new System.Text.StringBuilder();
+        foreach (var ch in normalized)
+        {
+            if (System.Globalization.CharUnicodeInfo.GetUnicodeCategory(ch) != System.Globalization.UnicodeCategory.NonSpacingMark)
+            {
+                sb.Append(ch);
+            }
+        }
+        return sb.ToString().Normalize(System.Text.NormalizationForm.FormC);
+    }
+}
+
+@* Thêm CSS tùy chỉnh cho các badge trạng thái *@
+<style>
+    .badge-status {
+        font-size: 0.8em;
+        padding: 0.4em 0.7em;
+        text-transform: capitalize;
+    }
+
+    .status-Pending { background-color: #ffc107; color: #000; }
+    .status-Processing { background-color: #0dcaf0; color: #000; }
+    .status-Shipped { background-color: #0d6efd; color: #fff; }
+    .status-Delivered { background-color: #198754; color: #fff; }
+    .status-Cancelled, .status-PaymentFailed { background-color: #dc3545; color: #fff; }
+
+    .status-update-form {
+        display: flex;
+        align-items: center;
+        gap: 5px; /* Khoảng cách giữa dropdown và nút */
+    }
+    .status-update-form .form-select-sm {
+        min-width: 120px; /* Độ rộng tối thiểu cho dropdown */
+    }
+</style>
+
+<div class="page-inner">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex align-items-center">
+                    <h4 class="card-title">Order List</h4>
+                </div>
+            </div>
+            <div class="card-body">
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success" role="alert">@TempData["SuccessMessage"]</div>
+                }
+                @if (TempData["ErrorMessage"] != null)
+                {
+                    <div class="alert alert-danger" role="alert">@TempData["ErrorMessage"]</div>
+                }
+
+                <div class="table-responsive">
+                    <table id="orderDataTable" class="display table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Mã đơn hàng</th>
+                                <th>Khách hàng</th>
+                                <th>Ngày đặt</th>
+                                <th>Nội dung chuyển khóa</th>
+                                <th>Tổng giá</th>
+                                <th>Trạng thái</th>
+                                <th class="no-filter">Hành động</th>
+                                <th class="no-filter">Chi tiết</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model != null && Model.Any())
+                            {
+                                @foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td>@item.OrderNumber</td>
+                                        <td>
+                                            @* Hiển thị tên người nhận, fallback về email nếu là user, hoặc tên nếu là đơn của khách *@
+                                            @(item.User?.Name ?? item.ShippingRecipientName)
+                                            <br>
+                                            <small class="text-muted">@item.User?.Email</small>
+                                        </td>
+                                        <td>@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td><strong id="transferSyntaxText">@(RemoveDiacritics(item.ShippingRecipientName)) - @(item.OrderNumber)</strong></td>
+                                        <td>@item.TotalPrice.ToString("N0") VND</td>
+                                        <td><span class="badge badge-status @("status-" + item.Status)">@item.Status</span></td>
+                                        <td class="action-buttons-group">
+                                            @* NÚT HÀNH ĐỘNG DỰA TRÊN TRẠNG THÁI HIỆN TẠI *@
+                                            <div class="d-flex flex-wrap">
+                                                @switch (item.Status)
+                                                {
+                                                    case OrderStatus.Pending:
+                                                        <form asp-action="UpdateOrderStatus" method="post" class="me-1 mb-1">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="orderId" value="@item.OrderId" />
+                                                            <input type="hidden" name="newStatus" value="@OrderStatus.Processing" />
+                                                            <button type="submit" class="btn btn-sm btn-success">Confirm Payment</button>
+                                                        </form>
+                                                        <form asp-action="UpdateOrderStatus" method="post" class="me-1 mb-1">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="orderId" value="@item.OrderId" />
+                                                            <input type="hidden" name="newStatus" value="@OrderStatus.PaymentFailed" />
+                                                            <button type="submit" class="btn btn-sm btn-warning text-dark">Payment Failed</button>
+                                                        </form>
+                                                        break;
+
+                                                    case OrderStatus.Processing:
+                                                        <form asp-action="UpdateOrderStatus" method="post" class="me-1 mb-1">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="orderId" value="@item.OrderId" />
+                                                            <input type="hidden" name="newStatus" value="@OrderStatus.Shipped" />
+                                                            <button type="submit" class="btn btn-sm btn-primary">Mark as Shipped</button>
+                                                        </form>
+                                                        break;
+
+                                                    case OrderStatus.Shipped:
+                                                        <form asp-action="UpdateOrderStatus" method="post" class="me-1 mb-1">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="orderId" value="@item.OrderId" />
+                                                            <input type="hidden" name="newStatus" value="@OrderStatus.Delivered" />
+                                                            <button type="submit" class="btn btn-sm btn-success">Mark as Delivered</button>
+                                                        </form>
+                                                        break;
+                                                }
+
+                                                @* NÚT HỦY VÀ XEM CHI TIẾT (LUÔN CÓ NẾU ĐƠN HÀNG CHƯA HOÀN TẤT) *@
+
+                                                @if (item.Status == OrderStatus.Delivered)
+                                                {
+                                                    <form asp-action="UpdateOrderStatus" method="post" class="me-1 mb-1" onsubmit="return confirm('Are you sure you want to cancel this order?');">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="orderId" value="@item.OrderId" />
+                                                        <input type="hidden" name="newStatus" value="@OrderStatus.Cancelled" />
+                                                        <button type="submit" class="btn btn-sm btn-danger">Hủy</button>
+                                                    </form>
+                                                }
+                                                
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <a asp-action="OrderDetails" asp-route-orderId="@item.OrderId" class="btn btn-sm btn-info">Details</a>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#orderDataTable').DataTable({
+                pageLength: 10,
+                order: [[2, 'desc']],
+                initComplete: function () {
+                    this.api()
+                        .columns('th:not(.no-filter)')
+                        .every(function () {
+                            var column = this;
+                            var select = $(
+                                '<select class="form-select"><option value=""></option></select>'
+                            )
+                                .appendTo($(column.footer()).empty())
+                                .on("change", function () {
+                                    var val = $.fn.dataTable.util.escapeRegex($(this).val());
+
+                                    column
+                                        .search(val ? "^" + val + "$" : "", true, false)
+                                        .draw();
+                                });
+
+                            column
+                                .data()
+                                .unique()
+                                .sort()
+                                .each(function (d, j) {
+                                    select.append(
+                                        '<option value="' + d + '">' + d + "</option>"
+                                    );
+                                });
+                        });
+                },
+            });
+        });
+    </script>
+}

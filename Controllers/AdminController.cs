@@ -1,4 +1,5 @@
-﻿using GCTWeb.Models.ViewModels;
+﻿using GCTWeb.Models.Enums;
+using GCTWeb.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -8,11 +9,13 @@ public class AdminController : Controller {
     
     private readonly ApplicationDbContext _context;
     private readonly IWebHostEnvironment _webHostEnvironment;
+    private readonly ILogger<AdminController> _logger;
 
-    public AdminController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
+    public AdminController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment, ILogger<AdminController> logger)
     {
         _context = context;
         _webHostEnvironment = webHostEnvironment;
+        _logger = logger;
     }
     
     public IActionResult Index() {
@@ -713,5 +716,121 @@ public class AdminController : Controller {
     
     public IActionResult Vouchers() {
         return View();
+    }
+    
+    [Route("Admin/Order")]
+    public async Task<IActionResult> OrderIndex()
+    {
+        var orders = await _context.Orders
+            .Include(o => o.User) // Tải thông tin người dùng (nếu có)
+            .OrderByDescending(o => o.CreatedAt) // Sắp xếp đơn hàng mới nhất lên đầu
+            .ToListAsync();
+                
+        return View("~/Views/Admin/Order/Index.cshtml", orders); // Chỉ định đường dẫn View
+    }
+    
+    [HttpPost, ActionName("UpdateOrderStatus")]
+    [ValidateAntiForgeryToken]
+    [Route("Admin/Order/UpdateOrderStatus")]
+    public async Task<IActionResult> UpdateOrderStatus(Guid orderId, OrderStatus newStatus)
+    {
+        if (orderId == Guid.Empty)
+        {
+            return BadRequest("Invalid Order ID.");
+        }
+
+        var order = await _context.Orders.FindAsync(orderId);
+        if (order == null)
+        {
+            return NotFound($"Order with ID {orderId} not found.");
+        }
+
+        try
+        {
+            order.Status = newStatus;
+            order.UpdatedAt = DateTime.UtcNow;
+
+            _context.Update(order);
+            await _context.SaveChangesAsync();
+                
+            _logger.LogInformation("Order {OrderId} status updated to {NewStatus} by Admin.", order.OrderId, newStatus);
+            TempData["SuccessMessage"] = $"Order #{order.OrderNumber} status has been updated to {newStatus}.";
+
+            // TODO: Gửi email thông báo cho khách hàng về việc cập nhật trạng thái đơn hàng
+            // await _emailSender.SendEmailAsync(...)
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating status for Order {OrderId}", orderId);
+            TempData["ErrorMessage"] = "An error occurred while updating the order status.";
+        }
+
+        // Chuyển hướng về trang danh sách hoặc trang chi tiết đơn hàng vừa cập nhật
+        return RedirectToAction(nameof(OrderIndex));
+    }
+    
+    [HttpPost, ActionName("UpdateOrderTrackingNumber")]
+    [ValidateAntiForgeryToken]
+    [Route("Admin/Order/UpdateOrderTrackingNumber")]
+    public async Task<IActionResult> UpdateOrderTrackingNumber(Guid orderId, string trackingNumber)
+    {
+        var order = await _context.Orders.FindAsync(orderId);
+        if (order == null) return NotFound();
+            
+        // Chỉ cho phép cập nhật tracking number nếu đơn hàng ở trạng thái Processing hoặc Shipped
+        if (order.Status != OrderStatus.Processing && order.Status != OrderStatus.Shipped)
+        {
+            TempData["ErrorMessage"] = $"Cannot add tracking number to an order with status {order.Status}.";
+            return RedirectToAction(nameof(OrderDetails), new { orderId = orderId });
+        }
+
+        try
+        {
+            order.TrackingNumber = trackingNumber;
+            // Nếu trạng thái là Processing và admin thêm tracking number, tự động chuyển thành Shipped
+            if (order.Status == OrderStatus.Processing && !string.IsNullOrEmpty(trackingNumber))
+            {
+                order.Status = OrderStatus.Shipped;
+                TempData["SuccessMessage"] = $"Tracking number added and order status updated to Shipped.";
+            }
+            else
+            {
+                TempData["SuccessMessage"] = "Tracking number updated successfully.";
+            }
+
+            order.UpdatedAt = DateTime.UtcNow;
+            _context.Update(order);
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating tracking number for Order {OrderId}", orderId);
+            TempData["ErrorMessage"] = "An error occurred while updating the tracking number.";
+        }
+
+        return RedirectToAction(nameof(OrderDetails), new { orderId = orderId });
+    }
+    
+    [Route("Admin/Order/{orderId}")]
+    public async Task<IActionResult> OrderDetails(Guid? orderId)
+    {
+        if (orderId == null)
+        {
+            return NotFound();
+        }
+
+        var order = await _context.Orders
+            .Include(o => o.User)
+            .Include(o => o.OrderDetails)
+            .ThenInclude(od => od.Product)
+            .ThenInclude(p => p!.PrimaryImage)
+            .FirstOrDefaultAsync(m => m.OrderId == orderId);
+
+        if (order == null)
+        {
+            return NotFound();
+        }
+        
+        return View("~/Views/Admin/Order/Details.cshtml", order); // Tạo View này ở bước sau
     }
 }
