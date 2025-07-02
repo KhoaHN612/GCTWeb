@@ -26,7 +26,8 @@ public class AdminController : Controller {
     public IActionResult Orders() {
         return View();
     }
-
+    
+    // --- Begin Product Actions ---
     [Route("Admin/Product")]
     public async Task<IActionResult> ProductIndex()
     {
@@ -208,8 +209,7 @@ public class AdminController : Controller {
         await PrepareViewModelForCreateError(viewModel);
         return View("../Admin/Product/Create", viewModel);
     }
-
-
+    
     private async Task PrepareViewModelForCreateError(ProductCreateViewModel viewModel)
     {
         viewModel.Brands = new SelectList(await _context.Brands.OrderBy(b => b.BrandName).ToListAsync(), "BrandId",
@@ -543,7 +543,9 @@ public class AdminController : Controller {
     {
         return _context.Products.Any(e => e.ProductId == id);
     }
+    // --- End Product Actions ---
     
+    // --- Begin Brand Actions ---
     [Route("Admin/Brand")]
     public async Task<IActionResult> BrandIndex() {
         var applicationDbContext = _context.Brands.ToListAsync();
@@ -598,9 +600,9 @@ public class AdminController : Controller {
         
         return RedirectToAction(nameof(BrandIndex));
     }
-    
     // --- End Brand Actions ---
     
+    // --- Begin Category Actions ---
     [Route("Admin/Category")]
     public async Task<IActionResult> CategoryIndex() {
         var applicationDbContext = _context.Categories.ToListAsync();
@@ -709,6 +711,123 @@ public class AdminController : Controller {
         }
         
         return RedirectToAction(nameof(GradeIndex));
+    }
+    // --- End Category Actions ---
+    
+    [Route("Admin/User")]
+    public async Task<IActionResult> UserIndex() {
+        var applicationDbContext = _context.Users.ToListAsync();
+        return View("../Admin/User/Index", await applicationDbContext);
+    }
+    
+    [Route("Admin/User/Detail/{guid}")]
+    public async Task<IActionResult> UserDetail(string guid) {
+        var user = await _context.Users
+            .Include(u => u.Addresses)
+            .FirstOrDefaultAsync(u => u.Id == guid);
+        
+        if (user == null) return NotFound();
+        
+        var viewModel = new UserDetailViewModel
+        {
+            Id = user.Id,
+            Name = user.Name,
+            Email = user.Email,
+            PhoneNumber = user.PhoneNumber,
+            CreatedAt = user.CreatedAt,
+            Addresses = user.Addresses.Select(a => new AddressViewModel
+            {
+                AddressId = a.AddressId,
+                RecipientName = a.RecipientName,
+                Phone = a.Phone,
+                Street = a.Street,
+                Ward = a.Ward,
+                City = a.City,
+                Country = a.Country,
+                IsDefaultShipping = a.IsDefaultShipping
+            }).ToList()
+        };
+        return View("../Admin/User/Detail", viewModel);
+    }
+    
+    [HttpPost]
+    [Route("Admin/User/Detail/{guid}/Update")]
+    public async Task<IActionResult> UserUpdate(string guid, [FromForm] string Name, [FromForm] string Email, [FromForm] string PhoneNumber) {
+        var user = await _context.Users.FindAsync(guid);
+        if (user == null) {
+            return NotFound();
+        }
+        
+        user.Name = Name;
+        user.Email = Email;
+        user.PhoneNumber = PhoneNumber;
+        
+        // Nếu bạn đang dùng UserManager thì có thể dùng nó để cập nhật thay vì _context.SaveChanges
+        _context.Users.Update(user);
+        await _context.SaveChangesAsync();
+        
+        // Redirect về lại trang Detail
+        return RedirectToAction("UserDetail", new { guid = user.Id });
+    }
+    
+    [HttpPost]
+    [Route("Admin/User/Detail/{guid}/Address")]
+    public async Task<IActionResult> AddAddress(string guid, [FromForm] AddressViewModel model) {
+        var address = new Address
+        {
+            AddressId = Guid.NewGuid(),
+            UserId = guid,
+            RecipientName = model.RecipientName,
+            Phone = model.Phone,
+            Street = model.Street,
+            Ward = model.Ward,
+            City = model.City,
+            Country = model.Country,
+            IsDefaultShipping = model.IsDefaultShipping,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        
+        _context.Addresses.Add(address);
+        await _context.SaveChangesAsync();
+        
+        return RedirectToAction("UserDetail", new { guid = guid });
+    }
+    
+    [HttpPost]
+    [Route("Admin/User/Detail/{id}/Address/Edit")]
+    public async Task<IActionResult> EditAddress(Guid id, [FromForm] AddressViewModel model)
+    {
+        var address = await _context.Addresses.FindAsync(id);
+        if (address == null) return NotFound();
+        
+        address.RecipientName = model.RecipientName;
+        address.Phone = model.Phone;
+        address.Street = model.Street;
+        address.Ward = model.Ward;
+        address.City = model.City;
+        address.Country = model.Country;
+        address.IsDefaultShipping = model.IsDefaultShipping;
+        address.UpdatedAt = DateTime.UtcNow;
+        
+        await _context.SaveChangesAsync();
+        return RedirectToAction("UserDetail", new { guid = address.UserId });
+    }
+    
+    [HttpPost]
+    [Route("Admin/User/Detail/{id}/Address/Delete")]
+    public async Task<IActionResult> DeleteAddress(Guid id) {
+        var address = await _context.Addresses.FindAsync(id);
+        if (address == null) {
+            return NotFound();
+        }
+        
+        var userId = address.UserId;
+        
+        _context.Addresses.Remove(address);
+        await _context.SaveChangesAsync();
+        
+        return RedirectToAction("UserDetail", new { guid = userId });
     }
     
     public IActionResult Vouchers() {

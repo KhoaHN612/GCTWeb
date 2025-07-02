@@ -1,4 +1,5 @@
-@model List<Grade>
+@model IEnumerable<GCTWeb.Models.ApplicationUser>
+
 
 @{
     ViewData["Title"] = "Index";
@@ -6,29 +7,20 @@
 }
 
 <div class="page-inner">
-
-    <div class="page-header">
-        <h3 class="fw-bold mb-3">Grade Management</h3>
-        <ul class="breadcrumbs mb-3">
-            <li class="nav-home">
-                <a href="#">
-                    <i class="fa-solid fa-house"></i>
-                </a>
-            </li>
-            <li class="separator">
-                <i class="fa-solid fa-greater-than"></i>
-            </li>
-            <li class="nav-item">
-                <a href="#">Grades List</a>
-            </li>
-        </ul>
+    <div class="page-header flex-column">
+        <div><h3 class="fw-bold">User Management</h3></div>
+        <div class="op-7">Manage all users' information here</div>
     </div>
+    
     <div class="col-md-12">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h4 class="card-title mb-0">Grades List</h4>
-                <button type="button" class="btn btn-primary btn-round" data-bs-toggle="modal" data-bs-target="#addGradeModal">
-                    Add Grade
+                <div>
+                    <h4 class="card-title mb-0">All Users</h4>
+                    <div class="op-7">@Model.Count() user(s)</div>
+                </div>
+                <button type="button" class="btn btn-primary btn-round" data-bs-toggle="modal" data-bs-target="#addBrandModal">
+                    Add User
                 </button>
             </div>
             <div class="card-body">
@@ -36,27 +28,29 @@
                     <table id="multi-filter-select" class="display table table-striped table-hover">
                         <thead>
                         <tr>
-                            <th>ID</th>
                             <th>Name</th>
+                            <th>Email</th>
+                            <th>Date added</th>
+                            <th>Action</th>
                         </tr>
                         </thead>
-                        @* <tfoot> *@
-                        @* <tr> *@
-                        @*     <th>ID</th> *@
-                        @*     <th>Name</th> *@
-                        @* </tr> *@
-                        @* </tfoot> *@
                         <tbody>
                         @if (Model != null && Model.Any()) { @* Added null check *@
-                            foreach (var grade in Model) {
+                            foreach (var user in Model) {
                                 <tr>
-                                    <td>@Html.DisplayFor(modelItem => grade.GradeId)</td>
+                                    <td>@Html.DisplayFor(modelItem => user.Name)</td>
+                                    <td>@Html.DisplayFor(modelItem => user.Email)</td>
+                                    <td>@Html.DisplayFor(modelItem => user.CreatedAt)</td>
                                     <td>
-                                        @Html.DisplayFor(modelItem => grade.GradeName)
-
-                                        <form asp-controller="Admin" asp-action="DeleteGrade" asp-route-id="@grade.GradeId" method="post" class="d-inline ms-2" onsubmit="return confirm('Are you sure you want to delete grade: @Html.Encode(grade.GradeName)?');">
+                                        <a asp-controller="Admin" asp-action="UserDetail" asp-route-guid="@user.Id" class="d-inline ms-2">
                                             @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-link btn-danger btn-sm p-0" title="Delete">
+                                            <button class="btn btn-icon btn-sm p-0" title="Detail">
+                                                <i class="fa fa-edit"></i>
+                                            </button>
+                                        </a>
+                                        <form asp-controller="Admin" asp-action="DeleteBrand" asp-route-id="@user.UserName" method="post" class="d-inline ms-2" onsubmit="return confirm('Are you sure you want to delete brand: @Html.Encode(user.Name)?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-icon btn-sm p-0" title="Delete">
                                                 <i class="fa fa-trash"></i>
                                             </button>
                                         </form>
@@ -66,7 +60,7 @@
                         }
                         else {
                             <tr>
-                                <td colspan="2" class="text-center">No grade found.</td> @* Reduced colspan to 2 *@
+                                <td colspan="2" class="text-center">No brands found.</td> @* Reduced colspan to 2 *@
                             </tr>
                         }
                         </tbody>
@@ -77,39 +71,42 @@
     </div>
 </div>
 
-<div class="modal fade" id="addGradeModal" tabindex="-1" aria-labelledby="addGradeModalLabel" aria-hidden="true">
+@* ========= Add Brand Modal ========= *@
+<div class="modal fade" id="addBrandModal" tabindex="-1" aria-labelledby="addBrandModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm"> @* modal-sm makes it smaller *@
         <div class="modal-content">
-            <form asp-controller="Admin" asp-action="CreateGrade" method="post" id="addGradeForm">
+            @* Use a form tag helper to post to the CreateBrand action in AdminController *@
+            <form asp-controller="Admin" asp-action="CreateBrand" method="post" id="addBrandForm">
                 @Html.AntiForgeryToken() @* Security Token *@
 
                 <div class="modal-header">
-                    <h5 class="modal-title" id="addGradeModalLabel">Add New Grade</h5>
+                    <h5 class="modal-title" id="addBrandModalLabel">Add New Brand</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="gradeNameInput" class="form-label">Grade Name</label>
-                        <input type="text" class="form-control" id="gradeNameInput" name="GradeName" required placeholder="Enter grade name">
-                        @* 'name="GradeName"' must match the parameter name or model property in your controller action *@
+                        <label for="brandNameInput" class="form-label">Brand Name</label>
+                        <input type="text" class="form-control" id="brandNameInput" name="BrandName" required placeholder="Enter brand name">
+                        @* 'name="BrandName"' must match the parameter name or model property in your controller action *@
                         <div class="invalid-feedback">
-                            Please enter a grade name.
+                            Please enter a brand name.
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Save Grade</button>
+                    <button type="submit" class="btn btn-primary">Save Brand</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+@* ========= End Add Brand Modal ========= *@
 
 
 @section Scripts {
     <script src="~/js/datatables/datatables.min.js"></script>
-    @* Your DataTables script *@
+
     <script>
         $(document).ready(function () {
             $("#multi-filter-select").DataTable({
@@ -125,12 +122,12 @@
                                 .appendTo($(column.footer()).empty())
                                 .on("change", function () {
                                     var val = $.fn.dataTable.util.escapeRegex($(this).val());
-    
+
                                     column
                                         .search(val ? "^" + val + "$" : "", true, false)
                                         .draw();
                                 });
-    
+
                             column
                                 .data()
                                 .unique()
@@ -147,16 +144,15 @@
     </script>
 
     <script>
-        var addGradeModalElement = document.getElementById('addGradeModal');
-        addGradeModalElement.addEventListener('hidden.bs.modal', function (event) {
+        var addBrandModalElement = document.getElementById('addBrandModal');
+        addBrandModalElement.addEventListener('hidden.bs.modal', function (event) {
             // Reset the form inside the modal when it's hidden
-            var form = document.getElementById('addGradeForm');
+            var form = document.getElementById('addBrandForm');
             if(form) {
                 form.reset();
                 // If you are using Bootstrap's validation classes, you might want to remove them too
-                $('#gradeNameInput').removeClass('is-invalid');
+                $('#brandNameInput').removeClass('is-invalid');
             }
         });
     </script>
-
 }

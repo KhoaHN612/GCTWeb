@@ -1,0 +1,242 @@
+@model GCTWeb.Models.ViewModels.UserDetailViewModel
+
+
+@{
+    ViewData["Title"] = "Index";
+    Layout = "../Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="page-inner">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="card-title mb-0">Thông tin người dùng</h4>
+                <button type="button" class="btn btn-primary btn-round"  id="editButton">
+                    Điều chỉnh
+                </button>
+            </div>
+            
+            <div class="card-body">
+                <form method="post" asp-action="UserUpdate" asp-controller="Admin" asp-route-guid="@Model.Id">
+                    <div id="user-form">
+                        <div class="form-group row mb-3">
+                            <label class="col-sm-2 col-form-label">Tên</label>
+                            <div class="col-sm-10">
+                                <input type="text" name="Name" class="form-control" id="inputName" value="@Model.Name" disabled/>
+                            </div>
+                        </div>
+
+                        <div class="form-group row mb-3">
+                            <label class="col-sm-2 col-form-label">Email</label>
+                            <div class="col-sm-10">
+                                <input type="email" name="Email" value="@Model.Email" class="form-control" readonly/>
+                            </div>
+                        </div>
+
+                        <div class="form-group row mb-3">
+                            <label class="col-sm-2 col-form-label">Số điện thoại</label>
+                            <div class="col-sm-10">
+                                <input type="text" name="PhoneNumber" class="form-control" id="inputPhone" value="@Model.PhoneNumber" disabled/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="saveButton" class="btn btn-success btn-round d-none">
+                        Lưu
+                    </button>
+                    <button type="button" id="cancelButton" class="btn btn-secondary btn-round d-none ms-2">
+                        Hủy
+                    </button>
+                </form>
+            </div>
+            
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="card-title mb-0">Danh sách địa chỉ</h4>
+                <button type="button" class="btn btn-primary btn-round" id="addressAddButton" data-bs-toggle="modal" data-bs-target="#addAddressModal">
+                    Thêm địa chỉ
+                </button>
+            </div>
+            
+            <div class="card-body">
+                @foreach (var addr in Model.Addresses)
+                {
+                    var modalId = "editAddressModal_" + addr.AddressId;
+                    var modalIdLabel = modalId + "_Label";
+
+                    <div class="border rounded p-3 mb-3">
+                        <strong>@addr.RecipientName</strong> – @addr.Phone <br />
+                        @addr.Street, @addr.Ward, @addr.City, @addr.Country <br />
+
+                        @if (addr.IsDefaultShipping)
+                        {
+                            <span class="badge bg-primary">Giao hàng mặc định</span>
+                        }
+
+                        <div class="mt-2">
+                            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#@modalId">Sửa</button>
+                            <form method="post" asp-action="DeleteAddress" asp-route-id="@addr.AddressId" class="d-inline">
+                                <button class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc muốn xoá địa chỉ này không?')">Xoá</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Modal chỉnh sửa địa chỉ -->
+                    <div class="modal fade" id="@modalId" tabindex="-1" aria-labelledby="@modalIdLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <form method="post" asp-action="EditAddress" asp-controller="Admin" asp-route-id="@addr.AddressId">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="@modalIdLabel">Chỉnh sửa địa chỉ</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="row mb-3">
+                                            <div class="col">
+                                                <label class="form-label">Tên người nhận</label>
+                                                <input name="RecipientName" class="form-control" value="@addr.RecipientName" required />
+                                            </div>
+                                            <div class="col">
+                                                <label class="form-label">Số điện thoại</label>
+                                                <input name="Phone" class="form-control" value="@addr.Phone" required />
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Địa chỉ (street)</label>
+                                            <input name="Street" class="form-control" value="@addr.Street" required />
+                                        </div>
+                                        <div class="row mb-3">
+                                            <div class="col">
+                                                <label class="form-label">Phường/Xã</label>
+                                                <input name="Ward" class="form-control" value="@addr.Ward" required />
+                                            </div>
+                                            <div class="col">
+                                                <label class="form-label">Thành phố</label>
+                                                <input name="City" class="form-control" value="@addr.City" required />
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Quốc gia</label>
+                                            <input name="Country" class="form-control" value="@addr.Country" required />
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input type="checkbox" class="form-check-input" name="IsDefaultShipping" value="true" @(addr.IsDefaultShipping ? "checked" : "") />
+                                            <input type="hidden" name="IsDefaultShipping" value="false" />
+                                            <label class="form-check-label">Giao hàng mặc định</label>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                        <button type="submit" class="btn btn-success">Lưu thay đổi</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+
+                @if (!Model.Addresses.Any())
+                {
+                    <p class="text-muted">Chưa có địa chỉ nào được thêm.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Modal thêm địa chỉ mới cho người dùng *@
+<div class="modal fade" id="addAddressModal" tabindex="-1" aria-labelledby="addAddressModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="post" asp-action="AddAddress" asp-controller="Admin" asp-route-guid="@Model.Id">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addAddressModalLabel">Thêm địa chỉ mới</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label class="form-label">Tên người nhận</label>
+                            <input name="RecipientName" class="form-control" required />
+                        </div>
+                        <div class="col">
+                            <label class="form-label">Số điện thoại</label>
+                            <input name="Phone" class="form-control" required />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Địa chỉ (street)</label>
+                        <input name="Street" class="form-control" required />
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label class="form-label">Phường/Xã</label>
+                            <input name="Ward" class="form-control" required />
+                        </div>
+                        <div class="col">
+                            <label class="form-label">Thành phố</label>
+                            <input name="City" class="form-control" required />
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label class="form-label">Quốc gia</label>
+                            <input name="Country" class="form-control" value="Vietnam" required />
+                        </div>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input type="hidden" name="IsDefaultShipping" value="false" />
+                        <input type="checkbox" class="form-check-input" name="IsDefaultShipping" value="true" id="defaultShippingCheckbox" />
+                        <label class="form-check-label" for="defaultShippingCheckbox">Giao hàng mặc định</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-success">Thêm địa chỉ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
+@section Scripts {
+    <script>
+        const editBtn = document.getElementById("editButton");
+        const saveBtn = document.getElementById("saveButton");
+        const cancelBtn = document.getElementById("cancelButton");
+        const inputs = document.querySelectorAll("#user-form input");
+    
+        // Lưu giá trị gốc
+        const originalValues = {};
+        inputs.forEach(input => {
+            originalValues[input.id] = input.value;
+        });
+    
+        editBtn.addEventListener("click", () => {
+            inputs.forEach(input => {
+                if (!input.readOnly) input.disabled = false;
+            });
+            editBtn.disabled = true;
+            saveBtn.classList.remove("d-none");
+            cancelBtn.classList.remove("d-none");
+        });
+    
+        cancelBtn.addEventListener("click", () => {
+            // Khôi phục giá trị gốc
+            inputs.forEach(input => {
+                if (originalValues.hasOwnProperty(input.id)) {
+                    input.value = originalValues[input.id];
+                }
+                input.disabled = true;
+            });
+    
+            // Bật lại nút Điều chỉnh, ẩn Lưu & Hủy
+            editBtn.disabled = false;
+            saveBtn.classList.add("d-none");
+            cancelBtn.classList.add("d-none");
+        });
+    </script>
+
+}
