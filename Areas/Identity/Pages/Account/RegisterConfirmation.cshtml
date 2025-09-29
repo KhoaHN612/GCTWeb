@@ -1,23 +1,73 @@
 ﻿@page
 @model RegisterConfirmationModel
 @{
-    ViewData["Title"] = "Register confirmation";
+    ViewData["Title"] = "Registration Successful";
+    int cooldown = 30;
+    var status = TempData["StatusMessage"] as string;
 }
 
-<h1>@ViewData["Title"]</h1>
-@{
-    if (@Model.DisplayConfirmAccountLink)
-    {
-<p>
-    This app does not currently have a real email sender registered, see <a href="https://aka.ms/aspaccountconf">these docs</a> for how to configure a real email sender.
-    Normally this would be emailed: <a id="confirm-link" href="@Model.EmailConfirmationUrl">Click here to confirm your account</a>
-</p>
-    }
-    else
-    {
-<p>
-        Please check your email to confirm your account.
-</p>
-    }
-}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <h1 class="mb-4 text-success">@ViewData["Title"]</h1>
+            <p class="lead">Thank you for registering!</p>
+            <p>
+                A confirmation email has been sent to <strong>@Model.Email</strong>.
+                Please check your inbox (and spam folder).
+            </p>
 
+            @if (!string.IsNullOrEmpty(status))
+            {
+                <div class="alert alert-info mt-3">@status</div>
+            }
+
+            <form method="post" asp-page-handler="ResendEmail">
+                <input type="hidden" name="email" value="@Model.Email" />
+
+                @if (Model.CanResend)
+                {
+                    <button type="submit" id="resendBtn" class="btn btn-outline-primary mt-3">
+                        Resend Confirmation Email
+                    </button>
+                }
+                else
+                {
+                    <button type="button" id="resendBtn" class="btn btn-outline-secondary mt-3"
+                            disabled data-remaining="@cooldown">
+                        Resend in @cooldown s
+                    </button>
+                }
+            </form>
+
+            <div class="mt-4">
+                <a class="btn btn-secondary" asp-page="/Index">Return to Home</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const btn = document.getElementById("resendBtn");
+            if (!btn) return;
+
+            let remaining = parseInt(btn.getAttribute("data-remaining"));
+            if (!isNaN(remaining) && remaining > 0) {
+                const interval = setInterval(() => {
+                    remaining--;
+                    if (remaining > 0) {
+                        btn.textContent = `Resend in ${remaining}s`;
+                    } else {
+                        clearInterval(interval);
+                        btn.textContent = "Resend Confirmation Email";
+                        btn.disabled = false;
+                        btn.classList.remove("btn-outline-secondary");
+                        btn.classList.add("btn-outline-primary");
+                        btn.type = "submit";
+                    }
+                }, 1000);
+            }
+        });
+    </script>
+}

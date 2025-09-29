@@ -27,23 +27,11 @@ namespace GCTWeb.Areas.Identity.Pages.Account
             _sender = sender;
         }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         public string Email { get; set; }
+        public string StatusMessage { get; set; }
+        public bool CanResend { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
-        public bool DisplayConfirmAccountLink { get; set; }
-
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
-        public string EmailConfirmationUrl { get; set; }
+        private const int CooldownSeconds = 30;
 
         public async Task<IActionResult> OnGetAsync(string email, string returnUrl = null)
         {
@@ -51,7 +39,6 @@ namespace GCTWeb.Areas.Identity.Pages.Account
             {
                 return RedirectToPage("/Index");
             }
-            returnUrl = returnUrl ?? Url.Content("~/");
 
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
@@ -60,21 +47,65 @@ namespace GCTWeb.Areas.Identity.Pages.Account
             }
 
             Email = email;
-            // Once you add a real email sender, you should remove this code that lets you confirm the account
-            DisplayConfirmAccountLink = true;
-            if (DisplayConfirmAccountLink)
+
+            // Kiểm tra cooldown
+            if (TempData["LastResendTime"] is DateTime lastResend)
             {
-                var userId = await _userManager.GetUserIdAsync(user);
-                var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-                EmailConfirmationUrl = Url.Page(
-                    "/Account/ConfirmEmail",
-                    pageHandler: null,
-                    values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
-                    protocol: Request.Scheme);
+                var elapsed = DateTime.UtcNow - lastResend;
+                CanResend = elapsed.TotalSeconds >= CooldownSeconds;
+            }
+            else
+            {
+                CanResend = true;
             }
 
             return Page();
+        }
+
+        public async Task<IActionResult> OnPostResendEmailAsync(string email, string returnUrl = null)
+        {
+            if (email == null)
+            {
+                return RedirectToPage("/Index");
+            }
+
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return NotFound($"Unable to load user with email '{email}'.");
+            }
+
+            // Kiểm tra cooldown
+            if (TempData["LastResendTime"] is DateTime lastResend)
+            {
+                var elapsed = DateTime.UtcNow - lastResend;
+                if (elapsed.TotalSeconds < CooldownSeconds)
+                {
+                    TempData["StatusMessage"] = $"Please wait {CooldownSeconds - (int)elapsed.TotalSeconds} seconds before resending.";
+                    return RedirectToPage(new { email });
+                }
+            }
+
+            // Generate confirmation token
+            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+
+            var callbackUrl = Url.Page(
+                "/Account/ConfirmEmail",
+                pageHandler: null,
+                values: new { area = "Identity", userId = user.Id, code = code, returnUrl = returnUrl },
+                protocol: Request.Scheme);
+
+            // Gửi mail ở background thread, không block request
+            Task.Run(() => _sender.SendEmailAsync(
+                email,
+                "Confirm your email",
+                $"Please confirm your account by <a href='{callbackUrl}'>clicking here</a>."));
+
+            TempData["LastResendTime"] = DateTime.UtcNow;
+            TempData["StatusMessage"] = "Confirmation email has been resent. Please check your inbox.";
+
+            return RedirectToPage(new { email });
         }
     }
 }
