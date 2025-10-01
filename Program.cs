@@ -23,6 +23,8 @@ builder.Services.AddRazorPages(options =>
     
     // /Identity/Account/Register -> /register
     options.Conventions.AddAreaPageRoute("Identity", "/Account/Register", "register");
+    
+    options.Conventions.AddAreaPageRoute("Identity", "/Account/ResendEmailConfirmation", "resend-email-confirmation");
 
     // /Identity/Account/Logout -> /logout
     // Logout thường là POST, nhưng convention này áp dụng cho GET nếu có trang xác nhận logout.
@@ -39,6 +41,7 @@ builder.Services.AddRazorPages(options =>
 
     // Ví dụ: /Identity/Account/ForgotPassword -> /forgot-password
     options.Conventions.AddAreaPageRoute("Identity", "/Account/ForgotPassword", "forgot-password");
+    options.Conventions.AddAreaPageRoute("Identity", "/Account/ForgotPasswordConfirmation", "forgot-password-confirmation");
     options.Conventions.AddAreaPageRoute("Identity", "/Account/ResetPassword", "reset-password");
 
     // Bạn có thể thêm nhiều AddAreaPageRoute cho các trang Identity khác mà bạn muốn tùy chỉnh URL
