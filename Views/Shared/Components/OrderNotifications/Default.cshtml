@@ -1,0 +1,58 @@
+﻿@model IEnumerable<GCTWeb.Models.Order>
+@{
+    var totalPending = (int)ViewBag.TotalPending;
+}
+
+<li class="nav-item topbar-icon dropdown hidden-caret">
+    <a class="nav-link dropdown-toggle" href="#" id="notifDropdown"
+       role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <i class="fa fa-bell"></i>
+        @if (totalPending > 0)
+        {
+            <span class="notification">@totalPending</span>
+        }
+    </a>
+    <ul class="dropdown-menu notif-box animated fadeIn" aria-labelledby="notifDropdown">
+        <li>
+            <div class="dropdown-title">
+                Bạn có <strong>@totalPending</strong> đơn hàng chờ xử lý
+            </div>
+        </li>
+        <li>
+            <div class="notif-scroll scrollbar-outer" style="max-height:300px; overflow-y:auto;">
+                <div class="notif-center">
+                    @if (Model.Any())
+                    {
+                        @foreach (var order in Model)
+                        {
+                            <a asp-controller="AdminOrders" asp-action="Details" asp-route-id="@order.OrderId">
+                                <div class="notif-icon notif-warning">
+                                    <i class="fa fa-shopping-cart"></i>
+                                </div>
+                                <div class="notif-content">
+                                    <span class="block">
+                                        Đơn @order.OrderNumber - @order.ShippingRecipientName
+                                    </span>
+                                    <span class="time">
+                                        @order.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                    </span>
+                                </div>
+                            </a>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted p-2">
+                            Không có đơn pending nào
+                        </div>
+                    }
+                </div>
+            </div>
+        </li>
+        <li>
+            <a class="see-all" asp-controller="AdminOrders" asp-action="Index">
+                Xem tất cả đơn hàng <i class="fa fa-angle-right"></i>
+            </a>
+        </li>
+    </ul>
+</li>
