@@ -1,9 +1,24 @@
-@model IEnumerable<GCTWeb.Models.ApplicationUser>
+@model IEnumerable<GCTWeb.Models.ViewModels.UserWithRolesViewModel>
 
 
 @{
     ViewData["Title"] = "Index";
     Layout = "../Shared/_LayoutAdmin.cshtml";
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
 }
 
 <div class="page-inner">
@@ -19,7 +34,7 @@
                     <h4 class="card-title mb-0">All Users</h4>
                     <div class="op-7">@Model.Count() user(s)</div>
                 </div>
-                <button type="button" class="btn btn-primary btn-round" data-bs-toggle="modal" data-bs-target="#addBrandModal">
+                <button type="button" class="btn btn-primary btn-round" data-bs-toggle="modal" data-bs-target="#addUserModal">
                     Add User
                 </button>
             </div>
@@ -30,6 +45,7 @@
                         <tr>
                             <th>Name</th>
                             <th>Email</th>
+                            <th>Role</th>
                             <th>Date added</th>
                             <th>Action</th>
                         </tr>
@@ -40,6 +56,16 @@
                                 <tr>
                                     <td>@Html.DisplayFor(modelItem => user.Name)</td>
                                     <td>@Html.DisplayFor(modelItem => user.Email)</td>
+                                    <td>
+                                        @if (user.Roles.Any())
+                                        {
+                                            @string.Join(", ", user.Roles)
+                                        }
+                                        else
+                                        {
+                                            <em>No Role</em>
+                                        }
+                                    </td>
                                     <td>@Html.DisplayFor(modelItem => user.CreatedAt)</td>
                                     <td>
                                         <a asp-controller="Admin" asp-action="UserDetail" asp-route-guid="@user.Id" class="d-inline ms-2">
@@ -48,9 +74,11 @@
                                                 <i class="fa fa-edit"></i>
                                             </button>
                                         </a>
-                                        <form asp-controller="Admin" asp-action="DeleteBrand" asp-route-id="@user.UserName" method="post" class="d-inline ms-2" onsubmit="return confirm('Are you sure you want to delete brand: @Html.Encode(user.Name)?');">
+                                        <form asp-controller="Admin" asp-action="DeleteUser" asp-route-id="@user.Id"
+                                              method="post" class="d-inline ms-2"
+                                              onsubmit="return confirm('Are you sure you want to delete user: @Html.Encode(user.Name)?');">
                                             @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-icon btn-sm p-0" title="Delete">
+                                            <button type="submit" class="btn btn-icon btn-sm p-0 text-danger" title="Delete">
                                                 <i class="fa fa-trash"></i>
                                             </button>
                                         </form>
@@ -60,7 +88,7 @@
                         }
                         else {
                             <tr>
-                                <td colspan="2" class="text-center">No brands found.</td> @* Reduced colspan to 2 *@
+                                <td colspan="2" class="text-center">No users found.</td> @* Reduced colspan to 2 *@
                             </tr>
                         }
                         </tbody>
@@ -71,37 +99,54 @@
     </div>
 </div>
 
-@* ========= Add Brand Modal ========= *@
-<div class="modal fade" id="addBrandModal" tabindex="-1" aria-labelledby="addBrandModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-sm"> @* modal-sm makes it smaller *@
+<!-- ========= Add User Modal ========= -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md">
         <div class="modal-content">
-            @* Use a form tag helper to post to the CreateBrand action in AdminController *@
-            <form asp-controller="Admin" asp-action="CreateBrand" method="post" id="addBrandForm">
-                @Html.AntiForgeryToken() @* Security Token *@
+            <form asp-controller="Admin" asp-action="CreateUser" method="post" id="addUserForm">
+                @Html.AntiForgeryToken()
 
                 <div class="modal-header">
-                    <h5 class="modal-title" id="addBrandModalLabel">Add New Brand</h5>
+                    <h5 class="modal-title" id="addUserModalLabel">Add New User</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
+
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="brandNameInput" class="form-label">Brand Name</label>
-                        <input type="text" class="form-control" id="brandNameInput" name="BrandName" required placeholder="Enter brand name">
-                        @* 'name="BrandName"' must match the parameter name or model property in your controller action *@
-                        <div class="invalid-feedback">
-                            Please enter a brand name.
-                        </div>
+                        <label class="form-label">Full Name</label>
+                        <input type="text" class="form-control" name="Name" required placeholder="Enter full name" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" name="Email" required placeholder="Enter email" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-control" name="Password" required placeholder="Enter password" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Role</label>
+                        <select class="form-select" name="Role" required>
+                            <option value="">-- Select Role --</option>
+                            <option value="Admin">Admin</option>
+                            <option value="Staff">Staff</option>
+                            <option value="Customer">Customer</option>
+                        </select>
                     </div>
                 </div>
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Save Brand</button>
+                    <button type="submit" class="btn btn-primary">Save User</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-@* ========= End Add Brand Modal ========= *@
+<!-- ========= End Add User Modal ========= -->
 
 
 @section Scripts {

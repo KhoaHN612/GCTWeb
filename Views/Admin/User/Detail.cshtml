@@ -49,7 +49,20 @@
                     </button>
                 </form>
             </div>
-            
+
+            <div class="card-header d-flex justify-content-between align-items-center mt-4">
+                <h4 class="card-title mb-0">Phân quyền người dùng</h4>
+                <button type="button" class="btn btn-primary btn-round" data-bs-toggle="modal" data-bs-target="#editRoleModal">
+                    Chỉnh sửa Role
+                </button>
+            </div>
+
+            <div class="card-body">
+                <p>
+                    <strong>Role hiện tại:</strong> <span class="badge bg-info">@Model.Role</span>
+                </p>
+            </div>
+
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h4 class="card-title mb-0">Danh sách địa chỉ</h4>
                 <button type="button" class="btn btn-primary btn-round" id="addressAddButton" data-bs-toggle="modal" data-bs-target="#addAddressModal">
@@ -199,7 +212,33 @@
     </div>
 </div>
 
+<!-- Modal chỉnh sửa role -->
+<div class="modal fade" id="editRoleModal" tabindex="-1" aria-labelledby="editRoleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form method="post" asp-action="UpdateUserRole" asp-controller="Admin" asp-route-guid="@Model.Id">
+                @Html.AntiForgeryToken()
 
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editRoleModalLabel">Chỉnh sửa Role người dùng</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Chọn Role mới</label>
+                        <select asp-for="Role" asp-items="@(new SelectList((List<string>)ViewBag.Roles))" class="form-select"></select>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-success">Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
     <script>
@@ -239,4 +278,13 @@
         });
     </script>
 
+    <script>
+        $(document).ready(function() {
+            const success = '@Html.Raw(TempData["Success"])';
+            const info = '@Html.Raw(TempData["Info"])';
+            if (success) alert(success);
+            if (info) alert(info);
+        });
+    </script>
+    
 }

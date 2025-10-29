@@ -139,4 +139,21 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+        var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+
+        await IdentitySeeder.SeedRolesAsync(roleManager);
+        await IdentitySeeder.SeedAdminUserAsync(userManager);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[SEED ERROR] {ex.Message}");
+    }
+}
+
 app.Run();

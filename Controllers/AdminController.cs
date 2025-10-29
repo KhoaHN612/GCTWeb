@@ -1,5 +1,6 @@
 ﻿using GCTWeb.Models.Enums;
 using GCTWeb.Models.ViewModels;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -10,11 +11,15 @@ public class AdminController : Controller {
     private readonly ApplicationDbContext _context;
     private readonly IWebHostEnvironment _webHostEnvironment;
     private readonly ILogger<AdminController> _logger;
+    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly RoleManager<IdentityRole> _roleManager;
 
-    public AdminController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment, ILogger<AdminController> logger)
+    public AdminController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment, ILogger<AdminController> logger, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
     {
         _context = context;
         _webHostEnvironment = webHostEnvironment;
+        _userManager = userManager;
+        _roleManager = roleManager;
         _logger = logger;
     }
     
@@ -719,38 +724,74 @@ public class AdminController : Controller {
     
     [Route("Admin/User")]
     public async Task<IActionResult> UserIndex() {
-        var applicationDbContext = _context.Users.ToListAsync();
-        return View("../Admin/User/Index", await applicationDbContext);
+        var users = _userManager.Users.ToList();
+        var userRolesViewModel = new List<UserWithRolesViewModel>();
+
+        foreach (var user in users)
+        {
+            var roles = await _userManager.GetRolesAsync(user);
+            userRolesViewModel.Add(new UserWithRolesViewModel
+            {
+                Id = user.Id,
+                Name = user.Name,
+                Email = user.Email,
+                EmailConfirmed = user.EmailConfirmed,
+                CreatedAt = user.CreatedAt, // đảm bảo ApplicationUser có thuộc tính này
+                Roles = roles.ToList()
+            });
+        }
+
+        return View("../Admin/User/Index",userRolesViewModel);
     }
     
-    [Route("Admin/User/Detail/{guid}")]
-    public async Task<IActionResult> UserDetail(string guid) {
-        var user = await _context.Users
-            .Include(u => u.Addresses)
-            .FirstOrDefaultAsync(u => u.Id == guid);
-        
-        if (user == null) return NotFound();
-        
-        var viewModel = new UserDetailViewModel
+    [HttpGet]
+    [Route("Admin/User/Create")]
+    public IActionResult CreateUser()
+    {
+        ViewBag.Roles = _roleManager.Roles.Select(r => r.Name).ToList();
+        return View();
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Route("Admin/User/Create")]
+    public async Task<IActionResult> CreateUser([FromForm] AddUserViewModel model)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var existingUser = await _userManager.FindByEmailAsync(model.Email);
+        if (existingUser != null)
         {
-            Id = user.Id,
-            Name = user.Name,
-            Email = user.Email,
-            PhoneNumber = user.PhoneNumber,
-            CreatedAt = user.CreatedAt,
-            Addresses = user.Addresses.Select(a => new AddressViewModel
-            {
-                AddressId = a.AddressId,
-                RecipientName = a.RecipientName,
-                Phone = a.Phone,
-                Street = a.Street,
-                Ward = a.Ward,
-                City = a.City,
-                Country = a.Country,
-                IsDefaultShipping = a.IsDefaultShipping
-            }).ToList()
+            TempData["Error"] = "Email đã được sử dụng.";
+            return RedirectToAction("UserIndex");
+        }
+
+        var user = new ApplicationUser
+        {
+            UserName = model.Email,
+            Email = model.Email,
+            Name = model.Name,
+            CreatedAt = DateTime.UtcNow
         };
-        return View("../Admin/User/Detail", viewModel);
+
+        var createResult = await _userManager.CreateAsync(user, model.Password);
+        if (!createResult.Succeeded)
+        {
+            TempData["Error"] = string.Join(", ", createResult.Errors.Select(e => e.Description));
+            return RedirectToAction("UserIndex");
+        }
+
+        // Gán role
+        if (!await _roleManager.RoleExistsAsync(model.Role))
+        {
+            await _roleManager.CreateAsync(new IdentityRole(model.Role));
+        }
+
+        await _userManager.AddToRoleAsync(user, model.Role);
+
+        TempData["Success"] = $"User '{model.Email}' đã được tạo thành công với role '{model.Role}'.";
+        return RedirectToAction("UserIndex");
     }
     
     [HttpPost]
@@ -771,6 +812,84 @@ public class AdminController : Controller {
         
         // Redirect về lại trang Detail
         return RedirectToAction("UserDetail", new { guid = user.Id });
+    }
+    
+    [Route("Admin/User/Detail/{guid}")]
+    public async Task<IActionResult> UserDetail(string guid)
+    {
+        var user = await _context.Users
+            .Include(u => u.Addresses)
+            .FirstOrDefaultAsync(u => u.Id == guid);
+
+        if (user == null) return NotFound();
+        
+        var roles = await _userManager.GetRolesAsync(user);
+        var currentRole = roles.FirstOrDefault() ?? "None";
+
+        var viewModel = new UserDetailViewModel
+        {
+            Id = user.Id,
+            Name = user.Name,
+            Email = user.Email,
+            PhoneNumber = user.PhoneNumber,
+            CreatedAt = user.CreatedAt,
+            Role = currentRole,
+            Addresses = user.Addresses.Select(a => new AddressViewModel
+            {
+                AddressId = a.AddressId,
+                RecipientName = a.RecipientName,
+                Phone = a.Phone,
+                Street = a.Street,
+                Ward = a.Ward,
+                City = a.City,
+                Country = a.Country,
+                IsDefaultShipping = a.IsDefaultShipping
+            }).ToList()
+        };
+
+        ViewBag.Roles = _roleManager.Roles.Select(r => r.Name).ToList();
+
+        return View("../Admin/User/Detail", viewModel);
+    }
+    
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Route("Admin/User/Detail/{guid}/UpdateRole")]
+    public async Task<IActionResult> UpdateUserRole(string guid, [FromForm] string Role)
+    {
+        var user = await _userManager.FindByIdAsync(guid);
+        if (user == null)
+            return NotFound();
+        
+        if (string.IsNullOrWhiteSpace(Role))
+        {
+            TempData["Info"] = "Vui lòng chọn một role hợp lệ.";
+            return RedirectToAction("UserDetail", new { guid });
+        }
+
+        var currentRoles = await _userManager.GetRolesAsync(user);
+        var currentRole = currentRoles.FirstOrDefault();
+
+        if (!string.IsNullOrEmpty(currentRole) && currentRole.Equals(Role, StringComparison.OrdinalIgnoreCase))
+        {
+            TempData["Info"] = "Người dùng đã có role này.";
+            return RedirectToAction("UserDetail", new { guid });
+        }
+
+        // Xóa role cũ nếu có
+        if (!string.IsNullOrEmpty(currentRole))
+            await _userManager.RemoveFromRoleAsync(user, currentRole);
+
+        // Tạo role mới nếu chưa tồn tại
+        if (!await _roleManager.RoleExistsAsync(Role))
+            await _roleManager.CreateAsync(new IdentityRole(Role));
+
+        // Gán role mới
+        await _userManager.AddToRoleAsync(user, Role);
+
+        TempData["Success"] = $"Role người dùng đã được cập nhật thành '{Role}'.";
+
+        return RedirectToAction("UserDetail", new { guid });
     }
     
     [HttpPost]
@@ -831,6 +950,43 @@ public class AdminController : Controller {
         await _context.SaveChangesAsync();
         
         return RedirectToAction("UserDetail", new { guid = userId });
+    }
+    
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteUser(string id)
+    {
+        if (string.IsNullOrEmpty(id))
+        {
+            TempData["Error"] = "Invalid user ID.";
+            return RedirectToAction(nameof(UserIndex));
+        }
+
+        var user = await _userManager.FindByIdAsync(id);
+        if (user == null)
+        {
+            TempData["Error"] = "User not found.";
+            return RedirectToAction(nameof(UserIndex));
+        }
+
+        try
+        {
+            var result = await _userManager.DeleteAsync(user);
+            if (result.Succeeded)
+            {
+                TempData["Success"] = $"User '{user.Email}' deleted successfully.";
+            }
+            else
+            {
+                TempData["Error"] = $"Failed to delete user '{user.Email}': {string.Join(", ", result.Errors.Select(e => e.Description))}";
+            }
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = $"Unexpected error: {ex.Message}";
+        }
+
+        return RedirectToAction(nameof(UserIndex));
     }
     
     public IActionResult Vouchers() {
