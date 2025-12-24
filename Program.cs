@@ -94,7 +94,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddDistributedMySqlCache(options =>
 {
     options.ConnectionString = connectionString;
-    options.SchemaName = "gctweb"; 
+    options.SchemaName = "GCTWeb"; 
     options.TableName = "AppDistributedCache"; 
     options.ExpiredItemsDeletionInterval = TimeSpan.FromMinutes(30);
 });
@@ -146,9 +146,14 @@ using (var scope = app.Services.CreateScope())
     {
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+        var context = services.GetRequiredService<ApplicationDbContext>();
 
+        // Seed Identity data (Roles & Admin User)
         await IdentitySeeder.SeedRolesAsync(roleManager);
         await IdentitySeeder.SeedAdminUserAsync(userManager);
+
+        // Seed Database (Products, Brands, Categories, etc.)
+        await DatabaseSeeder.SeedAsync(context);
     }
     catch (Exception ex)
     {
